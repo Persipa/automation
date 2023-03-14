@@ -15,7 +15,7 @@
 
     <modules>
         <module>btbtt-spider-entity</module>
-        <module>bttt-spider-core</module>
+        <module>btbtt-spider-core</module>
     </modules>
 
     <dependencyManagement>
