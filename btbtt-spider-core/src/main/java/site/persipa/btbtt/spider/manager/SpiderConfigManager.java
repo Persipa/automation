@@ -16,8 +16,8 @@ public class SpiderConfigManager {
     @Autowired
     private BtbttSpiderConfigService spiderConfigService;
 
-    public void addConfig(SpiderConfigDto spiderConfigDto) {
+    public boolean addConfig(SpiderConfigDto spiderConfigDto) {
         BtbttSpiderConfig spiderConfig = MapSpiderConfigMapper.INSTANCE.dto2Pojo(spiderConfigDto);
-        spiderConfigService.save(spiderConfig);
+        return spiderConfigService.save(spiderConfig);
     }
 }

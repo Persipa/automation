@@ -12,15 +12,15 @@ import site.persipa.cloud.pojo.model.Result;
  * @author persipa
  */
 @RestController
-@RequestMapping("/btbttSpider")
+@RequestMapping("/btbttSpider/config")
 public class SpiderConfigController {
 
     @Autowired
     private SpiderConfigManager spiderConfigManager;
 
-    @PostMapping("/config")
+    @PostMapping
     public Result<Boolean> addConfig(SpiderConfigDto spiderConfigDto) {
-        spiderConfigManager.addConfig(spiderConfigDto);
-        return Result.success(true);
+        return Result.success(spiderConfigManager.addConfig(spiderConfigDto));
     }
+
 }

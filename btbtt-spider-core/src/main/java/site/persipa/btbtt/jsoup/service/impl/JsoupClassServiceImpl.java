@@ -4,8 +4,9 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import site.persipa.btbtt.enums.BasicDataTypeEnum;
-import site.persipa.btbtt.enums.JsoupClassType;
 import site.persipa.btbtt.enums.PackagingDataTypeEnum;
+import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
+import site.persipa.btbtt.exception.jsoup.ProcessingException;
 import site.persipa.btbtt.jsoup.mapper.JsoupClassMapper;
 import site.persipa.btbtt.jsoup.service.JsoupClassService;
 import site.persipa.btbtt.pojo.jsoup.JsoupClass;
@@ -35,23 +36,25 @@ public class JsoupClassServiceImpl extends ServiceImpl<JsoupClassMapper, JsoupCl
     }
 
     @Override
-    public BasicDataTypeEnum basicDataType(String classId) {
+    public BasicDataTypeEnum basicDataType(String classId) throws ProcessingException {
         JsoupClass jsoupClass = this.getById(classId);
-        if (JsoupClassType.BASIC_DATA_TYPE.equals(jsoupClass.getClassType())) {
-            String className = jsoupClass.getClassName();
-            return BasicDataTypeEnum.parseByName(className);
+        String className = jsoupClass.getClassName();
+        BasicDataTypeEnum result = BasicDataTypeEnum.parseByName(className);
+        if (result == null) {
+            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
         }
-        return null;
+        return result;
     }
 
     @Override
-    public PackagingDataTypeEnum packagingDataType(String classId) {
+    public PackagingDataTypeEnum packagingDataType(String classId) throws ProcessingException {
         JsoupClass jsoupClass = this.getById(classId);
-        if (JsoupClassType.PACKAGING_DATA_TYPE.equals(jsoupClass.getClassType())) {
-            String classFullName = this.classFullName(jsoupClass);
-            return PackagingDataTypeEnum.parseByClassName(classFullName);
+        String classFullName = this.classFullName(jsoupClass);
+        PackagingDataTypeEnum result = PackagingDataTypeEnum.parseByClassName(classFullName);
+        if (result == null) {
+            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
         }
-        return null;
+        return result;
     }
 
     private Class<?> getClazz(JsoupClass jsoupClass) {

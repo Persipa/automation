@@ -7,8 +7,9 @@ import org.springframework.stereotype.Component;
 import site.persipa.btbtt.enums.BasicDataTypeEnum;
 import site.persipa.btbtt.enums.JsoupConstructorType;
 import site.persipa.btbtt.enums.PackagingDataTypeEnum;
-import site.persipa.btbtt.enums.exception.EntityConstrucExceptionTypeEnum;
+import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
 import site.persipa.btbtt.exception.jsoup.EntityConstructException;
+import site.persipa.btbtt.exception.jsoup.ProcessingException;
 import site.persipa.btbtt.jsoup.service.JsoupClassService;
 import site.persipa.btbtt.jsoup.service.JsoupConstructorService;
 import site.persipa.btbtt.jsoup.service.JsoupEntityService;
@@ -17,6 +18,7 @@ import site.persipa.btbtt.pojo.jsoup.JsoupEntity;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,17 +35,17 @@ public class JsoupEntityManager {
     @Autowired
     private JsoupConstructorService jsoupConstructorService;
 
-    public Object construct(String entityId) {
+    public Object construct(String entityId) throws ProcessingException {
         JsoupEntity jsoupEntity = jsoupEntityService.getById(entityId);
         return this.construct(jsoupEntity);
     }
 
-    private Object construct(JsoupEntity jsoupEntity) throws EntityConstructException {
+    private Object construct(JsoupEntity jsoupEntity) throws ProcessingException {
         Object result = null;
         JsoupConstructor jsoupConstructor = jsoupConstructorService.getById(jsoupEntity.getConstructorId());
         JsoupConstructorType constructType = jsoupConstructor.getConstructType();
         if (constructType == null) {
-            return null;
+            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
         }
         switch (constructType) {
             case BASIC_DATA_TYPE:
@@ -61,7 +63,7 @@ public class JsoupEntityManager {
         return result;
     }
 
-    private Object constructBasicData(JsoupEntity jsoupEntity) throws EntityConstructException {
+    private Object constructBasicData(JsoupEntity jsoupEntity) throws ProcessingException {
         String classId = jsoupEntity.getClassId();
         BasicDataTypeEnum dataType = jsoupClassService.basicDataType(classId);
         if (dataType == null) {
@@ -70,12 +72,12 @@ public class JsoupEntityManager {
         Class<?> packagingType = dataType.getPackagingType();
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
         if (method == null) {
-            throw new EntityConstructException(EntityConstrucExceptionTypeEnum.METHOD_NOT_FOUND, "valueOf");
+            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf");
         }
         return ReflectUtil.invokeStatic(method, jsoupEntity.getEntityValue());
     }
 
-    private Object constructPackagingData(JsoupEntity jsoupEntity) throws EntityConstructException {
+    private Object constructPackagingData(JsoupEntity jsoupEntity) throws ProcessingException {
         String classId = jsoupEntity.getClassId();
         PackagingDataTypeEnum dataType = jsoupClassService.packagingDataType(classId);
         if (dataType == null) {
@@ -87,12 +89,12 @@ public class JsoupEntityManager {
         }
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
         if (method == null) {
-            throw new EntityConstructException(EntityConstrucExceptionTypeEnum.METHOD_NOT_FOUND, "valueOf");
+            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf");
         }
         return ReflectUtil.invokeStatic(method, jsoupEntity.getEntityValue());
     }
 
-    private Object constructNormalData(JsoupEntity jsoupEntity) throws EntityConstructException {
+    private Object constructNormalData(JsoupEntity jsoupEntity) throws ProcessingException {
         String constructorId = jsoupEntity.getConstructorId();
         Class<?> entityClass = jsoupClassService.getClazz(jsoupEntity.getClassId());
         JsoupConstructor jsoupConstructor = jsoupConstructorService.getById(constructorId);
@@ -102,12 +104,12 @@ public class JsoupEntityManager {
         if (argCount.equals(0)) {
             Constructor<?> constructor = ReflectUtil.getConstructor(entityClass);
             if (constructor == null) {
-                throw new EntityConstructException(EntityConstrucExceptionTypeEnum.CONSTRUCTOR_NOT_FOUND);
+                throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
             }
             try {
                 return constructor.newInstance();
             } catch (ReflectiveOperationException e) {
-                throw new EntityConstructException(EntityConstrucExceptionTypeEnum.REFLECTIVE_OPERATION_EXCEPTION);
+                throw EntityConstructException.expected(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION);
             }
         }
 
@@ -118,23 +120,25 @@ public class JsoupEntityManager {
                 .filter(StrUtil::isNotBlank)
                 .collect(Collectors.toList());
         List<Class<?>> subEntityClassList = jsoupClassService.getClazz(subEntityClassIdList);
-        List<Object> argList = subEntityList.stream()
-                .map(this::construct)
-                .collect(Collectors.toList());
+        List<Object> argList = new ArrayList<>();
+        for (JsoupEntity subEntity : subEntityList) {
+            Object arg =  this.construct(subEntity);
+            argList.add(arg);
+        }
 
         if (!argCount.equals(subEntityList.size()) || !argCount.equals(subEntityClassList.size())) {
             // 构造参数数量不对
-            throw new EntityConstructException(EntityConstrucExceptionTypeEnum.CONSTRUCT_ARGS_COUNT_INCORRECT);
+            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCT_ARGS_COUNT_INCORRECT);
         }
 
         Constructor<?> constructor = ReflectUtil.getConstructor(entityClass, subEntityClassList.toArray(new Class[0]));
         if (constructor == null) {
-            throw new EntityConstructException(EntityConstrucExceptionTypeEnum.CONSTRUCTOR_NOT_FOUND);
+            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
         }
         try {
             return constructor.newInstance(argList.toArray(new Object[0]));
         } catch (ReflectiveOperationException e) {
-            throw new EntityConstructException(EntityConstrucExceptionTypeEnum.REFLECTIVE_OPERATION_EXCEPTION, e.getMessage());
+            throw EntityConstructException.expected(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION, e.getMessage());
         }
     }
 }

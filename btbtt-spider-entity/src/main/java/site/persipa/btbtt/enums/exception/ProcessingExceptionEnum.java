@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public enum EntityConstrucExceptionTypeEnum {
+public enum ProcessingExceptionEnum {
 
     CONSTRUCT_ARGS_COUNT_INCORRECT(10000, "构造参数数量不匹配"),
 
@@ -18,10 +18,16 @@ public enum EntityConstrucExceptionTypeEnum {
 
     REFLECTIVE_OPERATION_EXCEPTION(20000, "反射方法执行失败"),
 
+    METHOD_ARGS_COUNT_INCORRECT(20001, "方法参数数量不匹配"),
+
+    CLASS_TYPE_NOT_MATCH_EXCEPTION(30000, "类型匹配失败"),
+
+    CLASS_NOT_FOUND(30001, "无此类"),
+
     ;
 
     private final Integer code;
 
     private final String msg;
 
-}
+    }

@@ -4,6 +4,8 @@ import cn.hutool.core.util.ReflectUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
+import site.persipa.btbtt.exception.jsoup.ProcessingException;
 import site.persipa.btbtt.jsoup.service.JsoupClassService;
 import site.persipa.btbtt.jsoup.service.JsoupMethodArgService;
 import site.persipa.btbtt.jsoup.service.JsoupMethodService;
@@ -27,7 +29,7 @@ public class JsoupMethodManager {
     @Autowired
     private JsoupMethodArgService jsoupMethodArgService;
 
-    public Method parseMethod(String methodId) {
+    public Method parseMethod(String methodId) throws ProcessingException {
         JsoupMethod jsoupMethod = jsoupMethodService.getById(methodId);
         if (jsoupMethod == null) {
             return null;
@@ -37,8 +39,7 @@ public class JsoupMethodManager {
         try {
             clazz = Class.forName(className);
         } catch (ReflectiveOperationException e) {
-            // todo throw
-            return null;
+            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_NOT_FOUND);
         }
         int argCount = jsoupMethod.getArgCount() != null ? jsoupMethod.getArgCount() : 0;
 
@@ -54,8 +55,7 @@ public class JsoupMethodManager {
                 .collect(Collectors.toList());
         /// 验证参数数量
         if (argCount != argClassIdList.size()) {
-            // todo throw
-            return null;
+            throw ProcessingException.expected(ProcessingExceptionEnum.METHOD_ARGS_COUNT_INCORRECT);
         }
         Class<?>[] argClassArr = new Class[argCount];
         for (int i = 0; i < jsoupMethod.getArgCount(); i++) {
@@ -66,7 +66,7 @@ public class JsoupMethodManager {
         return ReflectUtil.getMethod(clazz, jsoupMethod.getMethodName(), argClassArr);
     }
 
-    public Object invokeMethod(String methodId, Object... args) {
+    public Object invokeMethod(String methodId, Object... args) throws ProcessingException {
         JsoupMethod jsoupMethod = jsoupMethodService.getById(methodId);
         Method method = this.parseMethod(methodId);
         Boolean staticMethod = jsoupMethod.getStaticMethod();
@@ -74,8 +74,7 @@ public class JsoupMethodManager {
             return ReflectUtil.invokeStatic(method, args);
         }
         if (args == null || args.length == 0) {
-            // todo 参数数量对不上
-            return null;
+            throw ProcessingException.expected(ProcessingExceptionEnum.METHOD_ARGS_COUNT_INCORRECT);
         } else {
             Object obj = args[0];
             if (args.length > 1) {

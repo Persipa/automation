@@ -3,6 +3,7 @@ package site.persipa.btbtt.jsoup.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import site.persipa.btbtt.enums.BasicDataTypeEnum;
 import site.persipa.btbtt.enums.PackagingDataTypeEnum;
+import site.persipa.btbtt.exception.jsoup.ProcessingException;
 import site.persipa.btbtt.pojo.jsoup.JsoupClass;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public interface JsoupClassService extends IService<JsoupClass> {
 
     List<Class<?>> getClazz(List<String> classIdList);
 
-    BasicDataTypeEnum basicDataType(String classId);
+    BasicDataTypeEnum basicDataType(String classId) throws ProcessingException;
 
-    PackagingDataTypeEnum packagingDataType(String classId);
+    PackagingDataTypeEnum packagingDataType(String classId) throws ProcessingException;
 }
