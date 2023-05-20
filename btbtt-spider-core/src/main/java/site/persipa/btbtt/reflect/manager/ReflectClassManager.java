@@ -11,7 +11,7 @@ import site.persipa.btbtt.enums.ReflectClassType;
 import site.persipa.btbtt.enums.exception.ProcessingClassExceptionEnum;
 import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
 import site.persipa.btbtt.exception.process.ProcessingClassException;
-import site.persipa.btbtt.exception.reflect.ProcessingException;
+import site.persipa.btbtt.exception.reflect.ReflectException;
 import site.persipa.btbtt.mapper.reflect.MapReflectClassMapper;
 import site.persipa.btbtt.pojo.reflect.ReflectClass;
 import site.persipa.btbtt.pojo.reflect.dto.ProcessingClassDto;
@@ -56,13 +56,13 @@ public class ReflectClassManager {
         return mapReflectClassMapper.pojoPage2VoPage(classPage);
     }
 
-    public Boolean add(ProcessingClassDto dto) throws ProcessingException, ProcessingClassException {
+    public Boolean add(ProcessingClassDto dto) throws ReflectException, ProcessingClassException {
         String classFullName = dto.getPackageName() + "." + dto.getClassName();
         Class<?> clazz;
         try {
             clazz = Class.forName(classFullName);
         } catch (ClassNotFoundException e) {
-            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_NOT_FOUND, classFullName);
+            throw ReflectException.expected(ProcessingExceptionEnum.CLASS_NOT_FOUND, classFullName);
         }
         ReflectClass existClass = classService.getOne(Wrappers.lambdaQuery(ReflectClass.class)
                 .eq(ReflectClass::getPackageName, clazz.getPackageName())
@@ -83,13 +83,13 @@ public class ReflectClassManager {
         return classService.save(reflectClass);
     }
 
-    public ReflectClassVo search(ProcessingClassDto dto) throws ProcessingException {
+    public ReflectClassVo search(ProcessingClassDto dto) throws ReflectException {
         String classFullName = dto.getPackageName() + "." + dto.getClassName();
         Class<?> clazz;
         try {
             clazz = Class.forName(classFullName);
         } catch (ClassNotFoundException e) {
-            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_NOT_FOUND, classFullName);
+            throw ReflectException.expected(ProcessingExceptionEnum.CLASS_NOT_FOUND, classFullName);
         }
         ReflectClassVo vo = new ReflectClassVo();
         vo.setPackageName(clazz.getPackageName());

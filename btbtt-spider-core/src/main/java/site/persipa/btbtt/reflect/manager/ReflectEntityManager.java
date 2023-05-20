@@ -1,20 +1,21 @@
 package site.persipa.btbtt.reflect.manager;
 
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import site.persipa.btbtt.enums.BasicDataTypeEnum;
-import site.persipa.btbtt.enums.ReflectEntityConstructorType;
 import site.persipa.btbtt.enums.PackagingDataTypeEnum;
+import site.persipa.btbtt.enums.ReflectEntityConstructorType;
 import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
 import site.persipa.btbtt.exception.reflect.EntityConstructException;
-import site.persipa.btbtt.exception.reflect.ProcessingException;
+import site.persipa.btbtt.pojo.reflect.ReflectEntity;
+import site.persipa.btbtt.pojo.reflect.ReflectEntityConstructor;
 import site.persipa.btbtt.reflect.service.ReflectClassService;
 import site.persipa.btbtt.reflect.service.ReflectEntityConstructorService;
 import site.persipa.btbtt.reflect.service.ReflectEntityService;
-import site.persipa.btbtt.pojo.reflect.ReflectEntityConstructor;
-import site.persipa.btbtt.pojo.reflect.ReflectEntity;
+import site.persipa.cloud.exception.PersipaCustomException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -35,18 +36,16 @@ public class ReflectEntityManager {
     @Autowired
     private ReflectEntityConstructorService reflectEntityConstructorService;
 
-    public Object construct(String entityId) throws ProcessingException {
+    public Object construct(String entityId) throws PersipaCustomException {
         ReflectEntity reflectEntity = reflectEntityService.getById(entityId);
         return this.construct(reflectEntity);
     }
 
-    private Object construct(ReflectEntity reflectEntity) throws ProcessingException {
+    private Object construct(ReflectEntity reflectEntity) throws PersipaCustomException {
         Object result = null;
         ReflectEntityConstructor entityConstructor = reflectEntityConstructorService.getById(reflectEntity.getConstructorId());
         ReflectEntityConstructorType constructType = entityConstructor.getConstructType();
-        if (constructType == null) {
-            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
-        }
+        Assert.notNull(constructType, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND));
         switch (constructType) {
             case BASIC_DATA_TYPE:
                 result = this.constructBasicData(reflectEntity);
@@ -63,7 +62,7 @@ public class ReflectEntityManager {
         return result;
     }
 
-    private Object constructBasicData(ReflectEntity reflectEntity) throws ProcessingException {
+    private Object constructBasicData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String classId = reflectEntity.getClassId();
         BasicDataTypeEnum dataType = reflectClassService.basicDataType(classId);
         if (dataType == null) {
@@ -71,13 +70,11 @@ public class ReflectEntityManager {
         }
         Class<?> packagingType = dataType.getPackagingType();
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
-        if (method == null) {
-            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf");
-        }
+        Assert.notNull(method, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf"));
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
-    private Object constructPackagingData(ReflectEntity reflectEntity) throws ProcessingException {
+    private Object constructPackagingData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String classId = reflectEntity.getClassId();
         PackagingDataTypeEnum dataType = reflectClassService.packagingDataType(classId);
         if (dataType == null) {
@@ -88,13 +85,11 @@ public class ReflectEntityManager {
             return reflectEntity.getEntityValue();
         }
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
-        if (method == null) {
-            throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf");
-        }
+        Assert.notNull(method, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf"));
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
-    private Object constructNormalData(ReflectEntity reflectEntity) throws ProcessingException {
+    private Object constructNormalData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String constructorId = reflectEntity.getConstructorId();
         Class<?> entityClass = reflectClassService.getClazz(reflectEntity.getClassId());
         ReflectEntityConstructor entityConstructor = reflectEntityConstructorService.getById(constructorId);
@@ -103,13 +98,11 @@ public class ReflectEntityManager {
         // 无参构造
         if (argCount.equals(0)) {
             Constructor<?> constructor = ReflectUtil.getConstructor(entityClass);
-            if (constructor == null) {
-                throw EntityConstructException.expected(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
-            }
+            Assert.notNull(constructor, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND));
             try {
                 return constructor.newInstance();
             } catch (ReflectiveOperationException e) {
-                throw EntityConstructException.expected(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION);
+                throw new PersipaCustomException(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION);
             }
         }
 

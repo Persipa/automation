@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
-import site.persipa.cloud.exception.PersipaBaseException;
+import site.persipa.cloud.exception.PersipaCustomException;
 
 /**
  * @author persipa
@@ -12,23 +12,23 @@ import site.persipa.cloud.exception.PersipaBaseException;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ProcessingException extends PersipaBaseException {
+public class ReflectException extends PersipaCustomException {
 
-    public static ProcessingException expected(ProcessingExceptionEnum exceptionType) {
-        return new ProcessingException(exceptionType);
+    public static ReflectException expected(ProcessingExceptionEnum exceptionType) {
+        return new ReflectException(exceptionType);
     }
 
-    public static ProcessingException expected(ProcessingExceptionEnum exceptionType, String description) {
-        return new ProcessingException(exceptionType, description);
+    public static ReflectException expected(ProcessingExceptionEnum exceptionType, String description) {
+        return new ReflectException(exceptionType, description);
     }
 
-    private ProcessingException(ProcessingExceptionEnum exceptionType) {
+    private ReflectException(ProcessingExceptionEnum exceptionType) {
         this.code = exceptionType.getCode();
         this.msg = exceptionType.getMsg();
         this.level = exceptionType.getLevel();
     }
 
-    private ProcessingException(ProcessingExceptionEnum exceptionType, String description) {
+    private ReflectException(ProcessingExceptionEnum exceptionType, String description) {
         this.code = exceptionType.getCode();
         this.msg = exceptionType.getMsg();
         this.level = exceptionType.getLevel();

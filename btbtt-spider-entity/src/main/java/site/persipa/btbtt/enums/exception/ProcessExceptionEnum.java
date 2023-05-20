@@ -10,12 +10,13 @@ import site.persipa.cloud.enums.PersipaExceptionDef;
  */
 @Getter
 @AllArgsConstructor
-public enum ProcessingClassExceptionEnum implements PersipaExceptionDef {
+public enum ProcessExceptionEnum implements PersipaExceptionDef {
 
-    CLASS_EXIST(60000, "类已存在", ExceptionLevelEnum.WARNING),
+    CONFIG_NOT_EXIST(770050101, "配置不存在", ExceptionLevelEnum.ERROR),
+
+    CONFIG_NON_EXECUTABLE(770050102, "配置不可执行", ExceptionLevelEnum.EXCEPTION),
 
     ;
-
 
     private final int code;
 
@@ -24,4 +25,3 @@ public enum ProcessingClassExceptionEnum implements PersipaExceptionDef {
     private final ExceptionLevelEnum level;
 
 }
-

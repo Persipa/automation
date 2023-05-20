@@ -7,7 +7,7 @@ import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
  * @author persipa
  */
 @Getter
-public class EntityConstructException extends ProcessingException {
+public class EntityConstructException extends ReflectException {
 
     public static EntityConstructException expected(ProcessingExceptionEnum exceptionType) {
         return new EntityConstructException(exceptionType);

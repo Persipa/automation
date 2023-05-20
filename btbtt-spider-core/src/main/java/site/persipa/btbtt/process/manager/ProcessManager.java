@@ -1,133 +1,68 @@
 package site.persipa.btbtt.process.manager;
 
+import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import site.persipa.btbtt.enums.ProcessingTypeEnum;
-import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
-import site.persipa.btbtt.enums.spider.NodeEntityGainTypeEnum;
-import site.persipa.btbtt.exception.reflect.ProcessingException;
-import site.persipa.btbtt.reflect.manager.ReflectEntityManager;
-import site.persipa.btbtt.reflect.manager.ReflectMethodManager;
+import site.persipa.btbtt.enums.exception.ProcessExceptionEnum;
+import site.persipa.btbtt.enums.spider.ProcessConfigStatusEnum;
+import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.ProcessNode;
-import site.persipa.btbtt.pojo.process.ProcessNodeEntity;
-import site.persipa.btbtt.process.service.*;
+import site.persipa.btbtt.process.service.ProcessConfigService;
+import site.persipa.btbtt.process.service.ProcessNodeService;
+import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 
-import java.lang.reflect.Array;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * @author persipa
  */
 @Component
+@RequiredArgsConstructor
 public class ProcessManager {
 
-    @Autowired
-    private ProcessNodeService processNodeService;
+    private final ProcessConfigService processConfigService;
+    private final ProcessNodeService processNodeService;
+    private final ProcessNodeManager processNodeManager;
 
-    @Autowired
-    private ProcessNodeEntityService processNodeEntityService;
 
-    @Autowired
-    private ReflectMethodManager jsoupMethodManager;
-    @Autowired
-    private ReflectEntityManager jsoupEntityManager;
+    public boolean execute(String configId) {
+        // 获取配置
+        ProcessConfig config = processConfigService.getById(configId);
+        Assert.notNull(config, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
 
-    public void execute(String configId) throws ReflectiveOperationException {
+        ProcessConfigStatusEnum processStatus = config.getProcessStatus();
+        Assert.isTrue(processStatus != null && processStatus.isExecutable(),
+                () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NON_EXECUTABLE));
+
+        // 获取所有节点
         List<ProcessNode> nodeList = processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
                 .eq(ProcessNode::getConfigId, configId)
                 .orderByAsc(ProcessNode::getSort));
         Object o = null;
-        for (ProcessNode node : nodeList) {
-            ProcessingTypeEnum processingType = node.getProcessingType();
+        for (ProcessNode processNode : nodeList) {
             try {
-                switch (processingType) {
-                    case SEQUENTIAL:
-                        o = this.processingJsoupMethod(node.getId(), o);
-                        break;
-                    case LOOP:
-                        if (o instanceof Iterable) {
-                            List<Object> list = new ArrayList<>();
-                            for (Object value : (Iterable<?>) o) {
-                                Object singleResult = this.processingJsoupMethod(node.getId(), value);
-                                list.add(singleResult);
-                            }
-                            o = list;
-                        } else {
-                            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
-                        }
-                        break;
-                    case ARRAY:
-                        // 先校验是否是数组
-                        if (o != null && !o.getClass().isArray()) {
-                            throw ProcessingException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
-                        }
-                        int length = Array.getLength(o);
-                        Class<?> resultType = Class.forName(node.getResultType());
-                        Object resultArray = Array.newInstance(resultType, length);
-                        for (int i = 0; i < length; i++) {
-                            Object singleResult = this.processingJsoupMethod(node.getId(), Array.get(o, i));
-                            Array.set(resultArray, i, singleResult);
-                        }
-                        o = resultArray;
-                        break;
-                }
-            } catch (ProcessingException e) {
-                // todo 记录日志
-                System.out.println(e.getDescription());
-            }
-            // todo 暂时不做校验
-            Class<?> returnType = Class.forName(node.getResultType());
-            if (returnType.isInstance(o)) {
-                System.out.println("body:");
-                System.out.println(o);
-                System.out.println("body end.");
-            } else {
-                System.out.println("processing error");
-                System.out.println(o);
+                o = processNodeManager.execute(processNode, o);
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace();
+                config.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
+                processConfigService.updateById(config);
+                return false;
+            } catch (PersipaCustomException e) {
+                e.getDescription();
+                e.printStackTrace();
+                config.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
+                processConfigService.updateById(config);
+                return false;
             }
         }
-    }
-
-    private Object processingJsoupMethod(String processingId, Object inputArg) throws ProcessingException {
-        ProcessNode node = processNodeService.getById(processingId);
-        // 获取执行的方法
-        String methodId = node.getMethodId();
-
-        // 获取执行的参数
-        List<ProcessNodeEntity> processingEntityList = processNodeEntityService
-                .list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                        .eq(ProcessNodeEntity::getProcessingId, processingId)
-                        .orderByAsc(ProcessNodeEntity::getArgOrder));
-        // 获取所有需要构造的参数
-        List<String> constructEntityIdList = processingEntityList.stream()
-                .filter(processingEntity -> NodeEntityGainTypeEnum.CONSTRUCT.equals(processingEntity.getGainType()))
-                .map(ProcessNodeEntity::getEntityId)
-                .collect(Collectors.toList());
-        Map<String, Object> constructEntityMap = new HashMap<>();
-        for (String entityId : constructEntityIdList) {
-            Object tempArg = jsoupEntityManager.construct(entityId);
-            constructEntityMap.put(entityId, tempArg);
-        }
-
-        List<Object> argList = new ArrayList<>();
-        for (ProcessNodeEntity processingEntity : processingEntityList) {
-            Object tempArg = null;
-            NodeEntityGainTypeEnum gainType = processingEntity.getGainType();
-            switch (gainType) {
-                case INPUT:
-                    tempArg = inputArg;
-                    break;
-                case CONSTRUCT:
-                    tempArg = constructEntityMap.get(processingEntity.getEntityId());
-                    break;
-                default:
-                    break;
-            }
-            argList.add(tempArg);
-        }
-        return jsoupMethodManager.invokeMethod(methodId, argList.toArray(new Object[0]));
+        System.out.println(o);
+        config.setLastProcessTime(LocalDateTime.now());
+        config.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
+        processConfigService.updateById(config);
+        return true;
     }
 
 }

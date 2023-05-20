@@ -6,7 +6,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import site.persipa.cloud.exception.PersipaBaseException;
+import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 import site.persipa.cloud.pojo.rest.model.Result;
 
 import java.util.List;
@@ -18,8 +19,14 @@ import java.util.List;
 public class CustomExceptionHandler {
 
     @ResponseBody
-    @ExceptionHandler({PersipaBaseException.class})
-    public Result<String> handle(PersipaBaseException exception) {
+    @ExceptionHandler({PersipaCustomException.class})
+    public Result<String> handle(PersipaCustomException exception) {
+        return Result.exception(exception, exception.getMsg(), exception.getDescription());
+    }
+
+    @ResponseBody
+    @ExceptionHandler({PersipaRuntimeException.class})
+    public Result<String> handle(PersipaRuntimeException exception) {
         return Result.exception(exception, exception.getMsg(), exception.getDescription());
     }
 
@@ -33,13 +40,14 @@ public class CustomExceptionHandler {
                 .append(": ")
                 .append(fieldError.getDefaultMessage())
                 .append(";"));
-        return Result.fail("参数验证失败", sb.toString());
+        return Result.success("参数验证失败" + sb);
+        //        return Result.fail("参数验证失败", sb.toString());
     }
 
     @ResponseBody
     @ExceptionHandler({Exception.class})
     public Result<Void> handle(Exception exception) {
         exception.printStackTrace();
-        return Result.error();
+        return Result.fail();
     }
 }

@@ -11,7 +11,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-@TableName("jsoup_method_arg")
+@TableName("reflect_method_arg")
 public class ReflectMethodArg {
 
     @TableId(type = IdType.ASSIGN_ID)

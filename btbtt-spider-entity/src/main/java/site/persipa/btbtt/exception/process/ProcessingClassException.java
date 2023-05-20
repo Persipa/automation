@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import site.persipa.btbtt.enums.exception.ProcessingClassExceptionEnum;
-import site.persipa.cloud.exception.PersipaBaseException;
+import site.persipa.cloud.exception.PersipaCustomException;
 
 /**
  * @author persipa
@@ -12,7 +12,7 @@ import site.persipa.cloud.exception.PersipaBaseException;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class ProcessingClassException extends PersipaBaseException {
+public class ProcessingClassException extends PersipaCustomException {
 
     public static ProcessingClassException excepted(ProcessingClassExceptionEnum exceptionType) {
         return new ProcessingClassException(exceptionType);

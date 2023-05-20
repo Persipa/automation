@@ -3,13 +3,14 @@ package site.persipa.btbtt.enums.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import site.persipa.cloud.enums.ExceptionLevelEnum;
+import site.persipa.cloud.enums.PersipaExceptionDef;
 
 /**
  * @author persipa
  */
 @Getter
 @AllArgsConstructor
-public enum ProcessingExceptionEnum {
+public enum ProcessingExceptionEnum implements PersipaExceptionDef {
 
     CONSTRUCT_ARGS_COUNT_INCORRECT(10000, "构造参数数量不匹配", ExceptionLevelEnum.EXCEPTION),
 
@@ -27,7 +28,7 @@ public enum ProcessingExceptionEnum {
 
     ;
 
-    private final Integer code;
+    private final int code;
 
     private final String msg;
 

@@ -15,32 +15,32 @@ public enum ProcessConfigStatusEnum {
     /**
      * 初始化，新建的状态
      */
-    INIT(0, "init"),
+    INIT(0, "init", false),
 
     /**
      * 正在编辑，不可执行
      */
-    EDITING(10, "editing"),
+    EDITING(10, "editing", false),
 
     /**
      * 已保存，可执行，但待验证
      */
-    SAVED(11, "saved"),
+    SAVED(11, "saved", true),
 
     /**
      * 可执行，验证通过
      */
-    VERIFY_PASS(21, "verifyPass"),
+    VERIFY_PASS(21, "verifyPass", true),
 
     /**
      * 不可执行，验证不通过
      */
-    VERIFY_FAIL(20, "verifyFail"),
+    VERIFY_FAIL(20, "verifyFail", false),
 
     /**
      * 执行发生错误，停止
      */
-    PROCESSING_ERROR(30, "processingError"),
+    PROCESSING_ERROR(30, "processingError", false),
 
     ;
 
@@ -49,4 +49,6 @@ public enum ProcessConfigStatusEnum {
 
     @JsonValue
     private final String value;
+
+    private final boolean executable;
 }
