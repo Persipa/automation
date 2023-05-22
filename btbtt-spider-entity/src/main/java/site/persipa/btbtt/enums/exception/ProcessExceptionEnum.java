@@ -16,6 +16,8 @@ public enum ProcessExceptionEnum implements PersipaExceptionDef {
 
     CONFIG_NON_EXECUTABLE(770050102, "配置不可执行", ExceptionLevelEnum.EXCEPTION),
 
+    CONFIG_NAME_DUPLICATE(770050103, "配置名称重复", ExceptionLevelEnum.EXCEPTION),
+
     ;
 
     private final int code;

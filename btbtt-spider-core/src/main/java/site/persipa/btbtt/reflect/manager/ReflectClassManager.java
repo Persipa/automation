@@ -1,23 +1,24 @@
 package site.persipa.btbtt.reflect.manager;
 
+import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import site.persipa.btbtt.enums.PackagingDataTypeEnum;
-import site.persipa.btbtt.enums.ReflectClassType;
 import site.persipa.btbtt.enums.exception.ProcessingClassExceptionEnum;
 import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
-import site.persipa.btbtt.exception.process.ProcessingClassException;
+import site.persipa.btbtt.enums.reflect.PackagingDataTypeEnum;
+import site.persipa.btbtt.enums.reflect.ReflectClassType;
 import site.persipa.btbtt.exception.reflect.ReflectException;
-import site.persipa.btbtt.mapper.reflect.MapReflectClassMapper;
+import site.persipa.btbtt.mapstruct.reflect.MapReflectClassMapper;
 import site.persipa.btbtt.pojo.reflect.ReflectClass;
 import site.persipa.btbtt.pojo.reflect.dto.ProcessingClassDto;
 import site.persipa.btbtt.pojo.reflect.dto.ProcessingClassSearchDto;
 import site.persipa.btbtt.pojo.reflect.vo.ReflectClassVo;
 import site.persipa.btbtt.reflect.service.ReflectClassService;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 import site.persipa.cloud.pojo.page.dto.PageDto;
 
 /**
@@ -56,7 +57,7 @@ public class ReflectClassManager {
         return mapReflectClassMapper.pojoPage2VoPage(classPage);
     }
 
-    public Boolean add(ProcessingClassDto dto) throws ReflectException, ProcessingClassException {
+    public Boolean add(ProcessingClassDto dto) throws ReflectException {
         String classFullName = dto.getPackageName() + "." + dto.getClassName();
         Class<?> clazz;
         try {
@@ -67,9 +68,7 @@ public class ReflectClassManager {
         ReflectClass existClass = classService.getOne(Wrappers.lambdaQuery(ReflectClass.class)
                 .eq(ReflectClass::getPackageName, clazz.getPackageName())
                 .eq(ReflectClass::getClassName, clazz.getSimpleName()), false);
-        if (existClass != null) {
-            throw ProcessingClassException.excepted(ProcessingClassExceptionEnum.CLASS_EXIST, classFullName);
-        }
+        Assert.isNull(existClass, () -> new PersipaRuntimeException(ProcessingClassExceptionEnum.CLASS_EXIST, classFullName));
         ReflectClass reflectClass = new ReflectClass();
         reflectClass.setPackageName(clazz.getPackageName());
         reflectClass.setClassName(clazz.getSimpleName());

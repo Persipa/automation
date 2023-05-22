@@ -5,11 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import site.persipa.btbtt.exception.reflect.ReflectException;
-import site.persipa.btbtt.exception.process.ProcessingClassException;
-import site.persipa.btbtt.reflect.manager.ReflectClassManager;
 import site.persipa.btbtt.pojo.reflect.dto.ProcessingClassDto;
 import site.persipa.btbtt.pojo.reflect.dto.ProcessingClassSearchDto;
 import site.persipa.btbtt.pojo.reflect.vo.ReflectClassVo;
+import site.persipa.btbtt.reflect.manager.ReflectClassManager;
 import site.persipa.cloud.pojo.page.dto.PageDto;
 import site.persipa.cloud.pojo.rest.model.Result;
 
@@ -17,7 +16,7 @@ import site.persipa.cloud.pojo.rest.model.Result;
  * @author persipa
  */
 @RestController
-@RequestMapping("/processing/class")
+@RequestMapping("/reflect/class")
 public class ClassController {
 
     @Autowired
@@ -41,7 +40,7 @@ public class ClassController {
     }
 
     @PostMapping("/add")
-    public Result<Boolean> addClass(@Validated @RequestBody ProcessingClassDto dto) throws ReflectException, ProcessingClassException {
+    public Result<Boolean> addClass(@Validated @RequestBody ProcessingClassDto dto) throws ReflectException {
         return Result.success(processingClassManager.add(dto));
     }
 }

@@ -22,6 +22,10 @@ public enum ProcessingExceptionEnum implements PersipaExceptionDef {
 
     METHOD_ARGS_COUNT_INCORRECT(20001, "方法参数数量不匹配", ExceptionLevelEnum.EXCEPTION),
 
+    METHOD_ARGS_POSITION_INCORRECT(20002, "方法参数位置不正确", ExceptionLevelEnum.EXCEPTION),
+
+    METHOD_ARG_NOT_FOUND(20003, "无此参数实例", ExceptionLevelEnum.EXCEPTION),
+
     CLASS_TYPE_NOT_MATCH_EXCEPTION(30000, "类型匹配失败", ExceptionLevelEnum.EXCEPTION),
 
     CLASS_NOT_FOUND(30001, "无此类", ExceptionLevelEnum.EXCEPTION),

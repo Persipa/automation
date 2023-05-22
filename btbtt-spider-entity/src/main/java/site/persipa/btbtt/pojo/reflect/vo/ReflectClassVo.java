@@ -1,7 +1,7 @@
 package site.persipa.btbtt.pojo.reflect.vo;
 
 import lombok.Data;
-import site.persipa.btbtt.enums.ReflectClassType;
+import site.persipa.btbtt.enums.reflect.ReflectClassType;
 
 /**
  * @author persipa

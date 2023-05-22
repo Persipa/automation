@@ -5,9 +5,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import site.persipa.btbtt.enums.exception.ProcessExceptionEnum;
-import site.persipa.btbtt.enums.spider.ProcessConfigStatusEnum;
+import site.persipa.btbtt.enums.process.ProcessConfigStatusEnum;
 import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.ProcessNode;
+import site.persipa.btbtt.pojo.process.bo.ProcessResultBo;
 import site.persipa.btbtt.process.service.ProcessConfigService;
 import site.persipa.btbtt.process.service.ProcessNodeService;
 import site.persipa.cloud.exception.PersipaCustomException;
@@ -28,7 +29,7 @@ public class ProcessManager {
     private final ProcessNodeManager processNodeManager;
 
 
-    public boolean execute(String configId) {
+    public ProcessResultBo execute(String configId) {
         // 获取配置
         ProcessConfig config = processConfigService.getById(configId);
         Assert.notNull(config, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
@@ -49,20 +50,19 @@ public class ProcessManager {
                 e.printStackTrace();
                 config.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
                 processConfigService.updateById(config);
-                return false;
+                return ProcessResultBo.fail();
             } catch (PersipaCustomException e) {
                 e.getDescription();
                 e.printStackTrace();
                 config.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
                 processConfigService.updateById(config);
-                return false;
+                return ProcessResultBo.fail();
             }
         }
-        System.out.println(o);
         config.setLastProcessTime(LocalDateTime.now());
         config.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
         processConfigService.updateById(config);
-        return true;
+        return ProcessResultBo.success(o);
     }
 
 }

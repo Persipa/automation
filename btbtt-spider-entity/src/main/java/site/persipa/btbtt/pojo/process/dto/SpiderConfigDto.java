@@ -2,6 +2,8 @@ package site.persipa.btbtt.pojo.process.dto;
 
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * @author persipa
  */
@@ -10,6 +12,7 @@ public class SpiderConfigDto {
 
     private String id;
 
+    @NotBlank(message = "配置名称不可为空")
     private String resourceName;
 
     private String resourcePostUri;

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.btbtt.enums.spider.NodeEntityGainTypeEnum;
+import site.persipa.btbtt.enums.process.NodeEntityGainTypeEnum;
 
 /**
  * 方法实际执行过程中需要用到的实例
@@ -21,7 +21,7 @@ public class ProcessNodeEntity {
     /**
      * 节点id
      */
-    private String processingId;
+    private String nodeId;
 
     /**
      * 当前实例获取的方式
@@ -36,6 +36,6 @@ public class ProcessNodeEntity {
     /**
      * 当前实例在方法的参数中的位置
      */
-    private String argOrder;
+    private Integer argOrder;
 
 }

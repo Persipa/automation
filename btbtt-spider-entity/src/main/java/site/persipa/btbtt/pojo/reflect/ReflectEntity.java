@@ -27,4 +27,14 @@ public class ReflectEntity {
      */
     private String entityValue;
 
+    /**
+     * 父实例的id
+     */
+    private String parentId;
+
+    /**
+     * 该实例再另一实例中的位置
+     */
+    private Integer sort;
+
 }

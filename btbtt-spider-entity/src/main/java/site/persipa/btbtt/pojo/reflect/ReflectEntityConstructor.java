@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.btbtt.enums.ReflectEntityConstructorType;
+import site.persipa.btbtt.enums.reflect.ReflectEntityConstructorType;
 
 /**
+ * 实例的构造器，多个实例可公用一个构造器
+ *
  * @author persipa
  */
 @Data

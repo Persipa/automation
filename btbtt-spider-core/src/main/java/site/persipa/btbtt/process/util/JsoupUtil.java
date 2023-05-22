@@ -2,7 +2,7 @@ package site.persipa.btbtt.process.util;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import site.persipa.btbtt.process.enums.UserAgentEnum;
+import site.persipa.btbtt.enums.btbtt.UserAgentEnum;
 
 import java.io.IOException;
 

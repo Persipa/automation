@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.btbtt.enums.ReflectClassType;
+import site.persipa.btbtt.enums.reflect.ReflectClassType;
 
 /**
  * 反射的类

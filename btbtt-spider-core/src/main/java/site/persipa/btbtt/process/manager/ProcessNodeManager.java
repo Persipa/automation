@@ -2,62 +2,161 @@ package site.persipa.btbtt.process.manager;
 
 import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import site.persipa.btbtt.enums.ProcessingTypeEnum;
+import org.springframework.transaction.annotation.Transactional;
+import site.persipa.btbtt.enums.exception.ProcessExceptionEnum;
 import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
-import site.persipa.btbtt.enums.spider.NodeEntityGainTypeEnum;
+import site.persipa.btbtt.enums.exception.ReflectExceptionEnum;
+import site.persipa.btbtt.enums.process.NodeEntityGainTypeEnum;
+import site.persipa.btbtt.enums.process.ProcessConfigStatusEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeStatusEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeTypeEnum;
+import site.persipa.btbtt.mapstruct.process.MapProcessNodeEntityMapper;
+import site.persipa.btbtt.mapstruct.process.MapProcessNodeMapper;
 import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.ProcessNode;
 import site.persipa.btbtt.pojo.process.ProcessNodeEntity;
 import site.persipa.btbtt.pojo.process.dto.ProcessNodeDto;
+import site.persipa.btbtt.pojo.reflect.ReflectEntity;
+import site.persipa.btbtt.pojo.reflect.ReflectMethod;
 import site.persipa.btbtt.process.service.ProcessConfigService;
 import site.persipa.btbtt.process.service.ProcessNodeEntityService;
 import site.persipa.btbtt.process.service.ProcessNodeService;
 import site.persipa.btbtt.reflect.manager.ReflectEntityManager;
 import site.persipa.btbtt.reflect.manager.ReflectMethodManager;
+import site.persipa.btbtt.reflect.service.ReflectEntityService;
+import site.persipa.btbtt.reflect.service.ReflectMethodService;
 import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * @author persipa
  */
 @Component
+@RequiredArgsConstructor
 public class ProcessNodeManager {
 
-    @Autowired
-    private ProcessConfigService processConfigService;
-    @Autowired
-    private ProcessNodeService processNodeService;
-    @Autowired
-    private ProcessNodeEntityService processNodeEntityService;
-    @Autowired
-    private ReflectEntityManager reflectEntityManager;
-    @Autowired
-    private ReflectMethodManager reflectMethodManager;
+    private final ProcessConfigService processConfigService;
 
+    private final ProcessNodeService processNodeService;
 
-    public String add(ProcessNodeDto processingDto) {
-        String configId = processingDto.getConfigId();
+    private final ProcessNodeEntityService processNodeEntityService;
+
+    private final ReflectEntityManager reflectEntityManager;
+
+    private final ReflectEntityService reflectEntityService;
+
+    private final ReflectMethodManager reflectMethodManager;
+
+    private final ReflectMethodService reflectMethodService;
+
+    private final MapProcessNodeMapper mapProcessNodeMapper;
+
+    private final MapProcessNodeEntityMapper mapProcessNodeEntityMapper;
+
+    @Transactional(rollbackFor = Exception.class)
+    public String add(ProcessNodeDto processNodeDto) {
+        // 校验配置存在
+        String configId = processNodeDto.getConfigId();
         ProcessConfig processConfig = processConfigService.getById(configId);
-        if (processConfig == null) {
-            // todo 直接抛出异常
-            return null;
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+
+        ProcessNode processNode = mapProcessNodeMapper.fromDto(processNodeDto);
+        processNode.setNodeStatus(ProcessNodeStatusEnum.EDITING);
+
+        // 节点sort
+        if (processNode.getSort() == null) {
+            long nodeCount = processNodeService.count(Wrappers.lambdaQuery(ProcessNode.class)
+                    .eq(ProcessNode::getConfigId, configId));
+            processNode.setSort(++nodeCount);
+        }
+        // 执行的方法
+        String methodId = processNode.getMethodId();
+        ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.METHOD_NOT_FOUND));
+        processNode.setResultType(reflectMethod.getReturnType());
+
+        processNodeService.saveOrUpdate(processNode);
+        String processNodeId = processNode.getId();
+
+        // 执行方法的参数
+        List<ProcessNodeEntity> nodeEntityList = processNodeDto.getNodeEntities().stream()
+                .map(entity -> mapProcessNodeEntityMapper.fromDto(entity, processNodeId))
+                .collect(Collectors.toList());
+        // 保存
+        processNodeEntityService.saveBatch(nodeEntityList);
+
+        // 更改配置状态为：编辑中
+        processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
+        processConfigService.updateById(processConfig);
+
+        return processNodeId;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public boolean remove(String nodeId) {
+        ProcessNode node = processNodeService.getById(nodeId);
+        if (node == null) {
+            return true;
         }
         List<ProcessNode> nodeList = processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
-                .eq(ProcessNode::getConfigId, configId));
+                .eq(ProcessNode::getConfigId, node.getConfigId())
+                .orderByDesc(ProcessNode::getSort));
+        // 如果删除的不是最后一个节点，则需要校验
+        if (!nodeList.isEmpty() && !nodeList.get(0).equals(node)) {
+            ProcessConfig processConfig = processConfigService.getById(node.getConfigId());
+            processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
+            processConfigService.updateById(processConfig);
+        }
+        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
+                .eq(ProcessNodeEntity::getNodeId, nodeId));
+        if (!nodeEntityList.isEmpty()) {
+            processNodeEntityService.removeBatchByIds(nodeEntityList);
+        }
+        processNodeService.removeById(nodeId);
 
-        return null;
+        return true;
+    }
+
+    private void verifyNodeEntity(ReflectMethod reflectMethod, List<ProcessNodeEntity> nodeEntityList) {
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+        // 方法执行所需参数数量需一致
+        Integer argCount = reflectMethod.getArgCount();
+        if (Boolean.FALSE.equals(reflectMethod.getStaticMethod())) {
+            argCount++;
+        }
+        Assert.equals(argCount, nodeEntityList.size(),
+                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARGS_COUNT_INCORRECT));
+        // 参数位置不可重复
+        Set<Integer> nodeEntityArgOrderSet = nodeEntityList.stream()
+                .map(ProcessNodeEntity::getArgOrder)
+                .collect(Collectors.toSet());
+        Assert.equals(nodeEntityList.size(), nodeEntityArgOrderSet.size(),
+                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARGS_POSITION_INCORRECT));
+        // 参数需存在
+        List<String> entityIdList = nodeEntityList.stream()
+                .filter(entity -> !NodeEntityGainTypeEnum.INPUT.equals(entity.getGainType()))
+                .map(ProcessNodeEntity::getEntityId)
+                .collect(Collectors.toList());
+        List<ReflectEntity> reflectEntityList = reflectEntityService.listByIds(entityIdList);
+        Assert.equals(entityIdList.size(), reflectEntityList.size(),
+                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARG_NOT_FOUND));
+    }
+
+    public List<ProcessNode> listByConfigId(String configId) {
+        return processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
+                .eq(ProcessNode::getConfigId, configId)
+                .orderByAsc(ProcessNode::getSort));
     }
 
     public Object execute(ProcessNode node, Object o) throws ReflectiveOperationException, PersipaCustomException {
-        ProcessingTypeEnum processingType = node.getProcessingType();
+        ProcessNodeTypeEnum processingType = node.getProcessingType();
         switch (processingType) {
             case SEQUENTIAL:
                 o = this.processingJsoupMethod(node.getId(), o);
@@ -99,7 +198,7 @@ public class ProcessNodeManager {
         // 获取执行的参数
         List<ProcessNodeEntity> processingEntityList = processNodeEntityService
                 .list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                        .eq(ProcessNodeEntity::getProcessingId, processingId)
+                        .eq(ProcessNodeEntity::getNodeId, processingId)
                         .orderByAsc(ProcessNodeEntity::getArgOrder));
         // 获取所有需要构造的参数
         List<String> constructEntityIdList = processingEntityList.stream()
@@ -135,6 +234,77 @@ public class ProcessNodeManager {
         Assert.isTrue(returnType.isInstance(result), () -> new PersipaCustomException(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION));
 
         return result;
+    }
+
+    /**
+     * 校验节点的方法 方法的参数 是否合法
+     *
+     * @param nodeId 节点id
+     * @return 校验的结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public boolean verify(String nodeId) {
+        // 校验方法
+        ProcessNode node = processNodeService.getById(nodeId);
+        String methodId = node.getMethodId();
+        /// 校验方法存在
+        ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+
+
+        // 校验方法的参数
+        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
+                .eq(ProcessNodeEntity::getNodeId, node.getId()));
+        this.verifyNodeEntity(reflectMethod, nodeEntityList);
+
+        // 校验通过则 刷新 ProcessConfig 的状态
+        node.setNodeStatus(ProcessNodeStatusEnum.SAVED);
+        processNodeService.updateById(node);
+        processConfigService.flushStatus(node.getConfigId());
+
+        return true;
+    }
+
+    /**
+     * 校验节点的方法 方法的参数 是否合法
+     *
+     * @param configId 配置id
+     * @return 校验的结果
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Integer verifyBatch(String configId) {
+        List<ProcessNode> nodeList = processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
+                .eq(ProcessNode::getConfigId, configId)
+                .ne(ProcessNode::getNodeStatus, ProcessNodeStatusEnum.SAVED));
+        if (nodeList.isEmpty()) {
+            return 0;
+        }
+        // 校验方法
+        Set<String> methodIdSet = nodeList.stream()
+                .map(ProcessNode::getMethodId)
+                .collect(Collectors.toSet());
+        List<ReflectMethod> methodList = reflectMethodService.listByIds(methodIdSet);
+        Map<String, ReflectMethod> reflectMethodMap = methodList.stream()
+                .collect(Collectors.toMap(ReflectMethod::getId, Function.identity(), (k1, k2) -> k1));
+        /// 校验方法存在
+        if (methodList.size() != methodIdSet.size()) {
+            nodeList.removeIf(node -> !reflectMethodMap.containsKey(node.getMethodId()));
+        }
+        Assert.notEmpty(nodeList, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+
+        // 校验方法的参数
+        for (ProcessNode node : nodeList) {
+            List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
+                    .eq(ProcessNodeEntity::getNodeId, node.getId()));
+            this.verifyNodeEntity(reflectMethodMap.get(node.getMethodId()), nodeEntityList);
+            node.setNodeStatus(ProcessNodeStatusEnum.SAVED);
+        }
+
+        // 校验通过则 刷新 ProcessConfig 的状态
+        processNodeService.updateBatchById(nodeList);
+        processConfigService.flushStatus(configId);
+
+        return nodeList.size();
     }
 
 }

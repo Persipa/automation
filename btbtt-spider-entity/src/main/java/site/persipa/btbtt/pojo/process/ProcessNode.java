@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.btbtt.enums.ProcessingTypeEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeReturnTypeEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeTypeEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeStatusEnum;
 
 /**
  * 流程执行的节点，每个实例包含一个执行的动作，可以执行一个方法
@@ -24,14 +26,19 @@ public class ProcessNode {
     private String configId;
 
     /**
+     * 当前节点的状态
+     */
+    private ProcessNodeStatusEnum nodeStatus;
+
+    /**
      * 当前节点执行的类型
      */
-    private ProcessingTypeEnum processingType;
+    private ProcessNodeTypeEnum processingType;
 
     /**
      * 当前节点在整个流程中所处的位置
      */
-    private Integer sort;
+    private Long sort;
 
     /**
      * 当前节点执行后的结果类型，备用
@@ -43,10 +50,10 @@ public class ProcessNode {
      */
     private String methodId;
 
-    //    private ProcessingReturnTypeEnum returnType;
-    //
-    //    private String viewMethodId;
-    //
+    private ProcessNodeReturnTypeEnum returnType;
+
+    private String viewMethodId;
+
     //    private Boolean iteratorView;
 
 }

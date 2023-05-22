@@ -7,4 +7,6 @@ import site.persipa.btbtt.pojo.process.ProcessConfig;
  * @author persipa
  */
 public interface ProcessConfigService extends IService<ProcessConfig> {
+
+    void flushStatus(String configId);
 }
