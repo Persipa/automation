@@ -1,7 +1,6 @@
 package site.persipa.btbtt.process.manager;
 
 import cn.hutool.core.lang.Assert;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import site.persipa.btbtt.enums.exception.ProcessExceptionEnum;
@@ -39,14 +38,12 @@ public class ProcessManager {
                 () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NON_EXECUTABLE));
 
         // 获取所有节点
-        List<ProcessNode> nodeList = processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
-                .eq(ProcessNode::getConfigId, configId)
-                .orderByAsc(ProcessNode::getSort));
+        List<ProcessNode> nodeList = processNodeService.listByConfigId(configId, true);
         Object o = null;
         for (ProcessNode processNode : nodeList) {
             try {
                 o = processNodeManager.execute(processNode, o);
-            } catch (ReflectiveOperationException e) {
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
                 config.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
                 processConfigService.updateById(config);

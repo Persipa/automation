@@ -14,13 +14,13 @@ import java.util.List;
  * @author persipa
  */
 @RestController
-@RequestMapping("/btbttSpider/processing/node")
+@RequestMapping("/process/node")
 public class ProcessNodeController {
 
     @Autowired
     private ProcessNodeManager processNodeManager;
 
-    @PostMapping
+    @PostMapping("/add")
     public Result<String> addNode(@RequestBody @Validated ProcessNodeDto nodeDto) {
         return Result.success(processNodeManager.add(nodeDto));
     }
@@ -30,8 +30,7 @@ public class ProcessNodeController {
         return Result.success(processNodeManager.remove(nodeId));
     }
 
-
-    @GetMapping("listByConfigId/{configId}")
+    @GetMapping("/listByConfigId/{configId}")
     public Result<List<ProcessNode>> listByConfigId(@PathVariable("configId") String configId) {
         return Result.success(processNodeManager.listByConfigId(configId));
     }

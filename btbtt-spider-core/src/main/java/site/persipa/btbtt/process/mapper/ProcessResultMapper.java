@@ -1,10 +1,10 @@
 package site.persipa.btbtt.process.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import site.persipa.btbtt.pojo.process.BtbttResult;
+import site.persipa.btbtt.pojo.process.ProcessResult;
 
 /**
  * @author persipa
  */
-public interface BtbttResultMapper extends BaseMapper<BtbttResult> {
+public interface ProcessResultMapper extends BaseMapper<ProcessResult> {
 }

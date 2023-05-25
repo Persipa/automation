@@ -8,7 +8,6 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
 import site.persipa.btbtt.enums.exception.ReflectExceptionEnum;
 import site.persipa.btbtt.enums.reflect.BasicDataTypeEnum;
 import site.persipa.btbtt.enums.reflect.PackagingDataTypeEnum;
@@ -49,7 +48,7 @@ public class ReflectEntityManager {
     private final MapReflectEntityMapper mapReflectEntityMapper;
 
     @Transactional(rollbackFor = Exception.class)
-    public boolean addEntity(ReflectEntityDto entityDto, boolean force) {
+    public String addEntity(ReflectEntityDto entityDto, boolean force) {
         // 树转数组
         List<ReflectEntity> entityList = this.parseEntityDto(entityDto, null, null);
         String entityId = entityList.stream().filter(entity -> entity.getParentId() == null)
@@ -62,7 +61,7 @@ public class ReflectEntityManager {
                 .map(ReflectEntity::getClassId)
                 .collect(Collectors.toSet());
         List<ReflectClass> reflectClassList = reflectClassService.listByIds(classIdSet);
-        Assert.equals(reflectClassList.size(), classIdSet.size(), () -> new PersipaRuntimeException(ReflectExceptionEnum.CLASS_NOT_FOUND));
+        Assert.equals(reflectClassList.size(), classIdSet.size(), () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_CLASS_NOT_FOUND));
 
         // 确定构造器存在
         Set<String> constructorIdSet = entityList.stream()
@@ -70,7 +69,7 @@ public class ReflectEntityManager {
                 .collect(Collectors.toSet());
         List<ReflectEntityConstructor> constructorList = reflectEntityConstructorService.listByIds(constructorIdSet);
         Assert.equals(constructorList.size(), constructorIdSet.size(),
-                () -> new PersipaRuntimeException(ReflectExceptionEnum.CONSTRUCTOR_NOT_FOUND));
+                () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_CONSTRUCTOR_NOT_FOUND));
 
         boolean success = reflectEntityService.saveOrUpdateBatch(entityList);
         // 非强制保存的情况，则尝试构造
@@ -82,7 +81,7 @@ public class ReflectEntityManager {
             }
         }
 
-        return success;
+        return entityId;
     }
 
 
@@ -146,8 +145,8 @@ public class ReflectEntityManager {
     private Object construct(ReflectEntity reflectEntity) throws PersipaCustomException {
         Object result = null;
         ReflectEntityConstructor entityConstructor = reflectEntityConstructorService.getById(reflectEntity.getConstructorId());
+        Assert.notNull(entityConstructor, () -> new PersipaCustomException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
         ReflectEntityConstructorType constructType = entityConstructor.getConstructType();
-        Assert.notNull(constructType, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND));
         switch (constructType) {
             case BASIC_DATA_TYPE:
                 result = this.constructBasicData(reflectEntity);
@@ -172,7 +171,7 @@ public class ReflectEntityManager {
         }
         Class<?> packagingType = dataType.getPackagingType();
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
-        Assert.notNull(method, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf"));
+        Assert.notNull(method, () -> new PersipaCustomException(ReflectExceptionEnum.NO_SUCH_METHOD_EXCEPTION, "valueOf"));
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
@@ -187,7 +186,7 @@ public class ReflectEntityManager {
             return reflectEntity.getEntityValue();
         }
         Method method = ReflectUtil.getMethod(packagingType, "valueOf", String.class);
-        Assert.notNull(method, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND, "valueOf"));
+        Assert.notNull(method, () -> new PersipaCustomException(ReflectExceptionEnum.NO_SUCH_METHOD_EXCEPTION, "valueOf"));
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
@@ -200,11 +199,11 @@ public class ReflectEntityManager {
         // 无参构造
         if (argCount.equals(0)) {
             Constructor<?> constructor = ReflectUtil.getConstructor(entityClass);
-            Assert.notNull(constructor, () -> new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND));
+            Assert.notNull(constructor, () -> new PersipaCustomException(ReflectExceptionEnum.NO_SUCH_METHOD_EXCEPTION, entityClass.getName()));
             try {
                 return constructor.newInstance();
             } catch (ReflectiveOperationException e) {
-                throw new PersipaCustomException(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION);
+                throw new PersipaCustomException(ReflectExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION);
             }
         }
 
@@ -223,17 +222,15 @@ public class ReflectEntityManager {
 
         if (!argCount.equals(subEntityList.size()) || !argCount.equals(subEntityClassList.size())) {
             // 构造参数数量不对
-            throw new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCT_ARGS_COUNT_INCORRECT);
+            throw new PersipaCustomException(ReflectExceptionEnum.REFLECT_CONSTRUCTOR_ARGS_COUNT_INCORRECT);
         }
 
         Constructor<?> constructor = ReflectUtil.getConstructor(entityClass, subEntityClassList.toArray(new Class[0]));
-        if (constructor == null) {
-            throw new PersipaCustomException(ProcessingExceptionEnum.CONSTRUCTOR_NOT_FOUND);
-        }
+        Assert.notNull(constructor, () -> new PersipaCustomException(ReflectExceptionEnum.NO_SUCH_METHOD_EXCEPTION, entityClass.getName()));
         try {
             return constructor.newInstance(argList.toArray(new Object[0]));
         } catch (ReflectiveOperationException e) {
-            throw new PersipaCustomException(ProcessingExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION, e.getMessage());
+            throw new PersipaCustomException(ReflectExceptionEnum.REFLECTIVE_OPERATION_EXCEPTION, e.getMessage());
         }
     }
 }

@@ -1,15 +1,16 @@
 package site.persipa.btbtt.reflect.service.impl;
 
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import site.persipa.btbtt.enums.exception.ReflectExceptionEnum;
 import site.persipa.btbtt.enums.reflect.BasicDataTypeEnum;
 import site.persipa.btbtt.enums.reflect.PackagingDataTypeEnum;
-import site.persipa.btbtt.enums.exception.ProcessingExceptionEnum;
-import site.persipa.btbtt.exception.reflect.ReflectException;
+import site.persipa.btbtt.pojo.reflect.ReflectClass;
 import site.persipa.btbtt.reflect.mapper.ReflectClassMapper;
 import site.persipa.btbtt.reflect.service.ReflectClassService;
-import site.persipa.btbtt.pojo.reflect.ReflectClass;
+import site.persipa.cloud.exception.PersipaCustomException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,24 +37,20 @@ public class ReflectClassServiceImpl extends ServiceImpl<ReflectClassMapper, Ref
     }
 
     @Override
-    public BasicDataTypeEnum basicDataType(String classId) throws ReflectException {
+    public BasicDataTypeEnum basicDataType(String classId) throws PersipaCustomException {
         ReflectClass jsoupClass = this.getById(classId);
         String className = jsoupClass.getClassName();
         BasicDataTypeEnum result = BasicDataTypeEnum.parseByName(className);
-        if (result == null) {
-            throw ReflectException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
-        }
+        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.RELECT_CLASS_TYPE_NOT_MATCH));
         return result;
     }
 
     @Override
-    public PackagingDataTypeEnum packagingDataType(String classId) throws ReflectException {
+    public PackagingDataTypeEnum packagingDataType(String classId) throws PersipaCustomException {
         ReflectClass jsoupClass = this.getById(classId);
         String classFullName = this.classFullName(jsoupClass);
         PackagingDataTypeEnum result = PackagingDataTypeEnum.parseByClassName(classFullName);
-        if (result == null) {
-            throw ReflectException.expected(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION);
-        }
+        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.RELECT_CLASS_TYPE_NOT_MATCH));
         return result;
     }
 

@@ -79,24 +79,33 @@ public class ProcessNodeManager {
         // 执行的方法
         String methodId = processNode.getMethodId();
         ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
-        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.METHOD_NOT_FOUND));
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
         processNode.setResultType(reflectMethod.getReturnType());
 
         processNodeService.saveOrUpdate(processNode);
-        String processNodeId = processNode.getId();
+        String nodeId = processNode.getId();
 
         // 执行方法的参数
+        List<ProcessNodeEntity> existNodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
+        Map<Integer, String> argOrderIdMap;
+        if (!existNodeEntityList.isEmpty()) {
+            argOrderIdMap = existNodeEntityList.stream()
+                    .collect(Collectors.toMap(ProcessNodeEntity::getArgOrder, ProcessNodeEntity::getId, (k1, k2) -> k1));
+        } else {
+            argOrderIdMap = Collections.emptyMap();
+        }
         List<ProcessNodeEntity> nodeEntityList = processNodeDto.getNodeEntities().stream()
-                .map(entity -> mapProcessNodeEntityMapper.fromDto(entity, processNodeId))
+                .map(entity -> mapProcessNodeEntityMapper.fromDto(entity, nodeId))
                 .collect(Collectors.toList());
+        nodeEntityList.forEach(entity -> entity.setId(argOrderIdMap.get(entity.getArgOrder())));
         // 保存
-        processNodeEntityService.saveBatch(nodeEntityList);
+        processNodeEntityService.saveOrUpdateBatch(nodeEntityList);
 
         // 更改配置状态为：编辑中
         processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
         processConfigService.updateById(processConfig);
 
-        return processNodeId;
+        return nodeId;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -105,17 +114,14 @@ public class ProcessNodeManager {
         if (node == null) {
             return true;
         }
-        List<ProcessNode> nodeList = processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
-                .eq(ProcessNode::getConfigId, node.getConfigId())
-                .orderByDesc(ProcessNode::getSort));
+        List<ProcessNode> nodeList = processNodeService.listByConfigId(node.getConfigId(), false);
         // 如果删除的不是最后一个节点，则需要校验
         if (!nodeList.isEmpty() && !nodeList.get(0).equals(node)) {
             ProcessConfig processConfig = processConfigService.getById(node.getConfigId());
             processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
             processConfigService.updateById(processConfig);
         }
-        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                .eq(ProcessNodeEntity::getNodeId, nodeId));
+        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
         if (!nodeEntityList.isEmpty()) {
             processNodeEntityService.removeBatchByIds(nodeEntityList);
         }
@@ -125,20 +131,20 @@ public class ProcessNodeManager {
     }
 
     private void verifyNodeEntity(ReflectMethod reflectMethod, List<ProcessNodeEntity> nodeEntityList) {
-        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
         // 方法执行所需参数数量需一致
         Integer argCount = reflectMethod.getArgCount();
         if (Boolean.FALSE.equals(reflectMethod.getStaticMethod())) {
             argCount++;
         }
         Assert.equals(argCount, nodeEntityList.size(),
-                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARGS_COUNT_INCORRECT));
+                () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_ARGS_COUNT_INCORRECT));
         // 参数位置不可重复
         Set<Integer> nodeEntityArgOrderSet = nodeEntityList.stream()
                 .map(ProcessNodeEntity::getArgOrder)
                 .collect(Collectors.toSet());
         Assert.equals(nodeEntityList.size(), nodeEntityArgOrderSet.size(),
-                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARGS_POSITION_INCORRECT));
+                () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_ARGS_POSITION_INCORRECT));
         // 参数需存在
         List<String> entityIdList = nodeEntityList.stream()
                 .filter(entity -> !NodeEntityGainTypeEnum.INPUT.equals(entity.getGainType()))
@@ -146,30 +152,27 @@ public class ProcessNodeManager {
                 .collect(Collectors.toList());
         List<ReflectEntity> reflectEntityList = reflectEntityService.listByIds(entityIdList);
         Assert.equals(entityIdList.size(), reflectEntityList.size(),
-                () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_ARG_NOT_FOUND));
+                () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
     }
 
     public List<ProcessNode> listByConfigId(String configId) {
-        return processNodeService.list(Wrappers.lambdaQuery(ProcessNode.class)
-                .eq(ProcessNode::getConfigId, configId)
-                .orderByAsc(ProcessNode::getSort));
+        return processNodeService.listByConfigId(configId, true);
     }
 
-    public Object execute(ProcessNode node, Object o) throws ReflectiveOperationException, PersipaCustomException {
-        ProcessNodeTypeEnum processingType = node.getProcessingType();
-        switch (processingType) {
+    public Object execute(ProcessNode node, Object o) throws ClassNotFoundException, PersipaCustomException {
+        ProcessNodeTypeEnum processType = node.getNodeType();
+        switch (processType) {
             case SEQUENTIAL:
-                o = this.processingJsoupMethod(node.getId(), o);
+                o = this.executeProcessNode(node.getId(), o);
                 break;
             case LOOP:
                 Assert.isTrue(o instanceof Iterable, () -> new PersipaCustomException(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION));
                 List<Object> list = new ArrayList<>();
                 for (Object value : (Iterable<?>) o) {
-                    Object singleResult = this.processingJsoupMethod(node.getId(), value);
+                    Object singleResult = this.executeProcessNode(node.getId(), value);
                     list.add(singleResult);
                 }
                 o = list;
-
                 break;
             case ARRAY:
                 // 先校验是否是数组
@@ -179,7 +182,7 @@ public class ProcessNodeManager {
                 Class<?> resultType = Class.forName(node.getResultType());
                 Object resultArray = Array.newInstance(resultType, length);
                 for (int i = 0; i < length; i++) {
-                    Object singleResult = this.processingJsoupMethod(node.getId(), Array.get(o, i));
+                    Object singleResult = this.executeProcessNode(node.getId(), Array.get(o, i));
                     Array.set(resultArray, i, singleResult);
                 }
                 o = resultArray;
@@ -190,16 +193,13 @@ public class ProcessNodeManager {
         return o;
     }
 
-    private Object processingJsoupMethod(String processingId, Object inputArg) throws ReflectiveOperationException, PersipaCustomException {
-        ProcessNode node = processNodeService.getById(processingId);
+    private Object executeProcessNode(String nodeId, Object inputArg) throws ClassNotFoundException, PersipaCustomException {
+        ProcessNode node = processNodeService.getById(nodeId);
         // 获取执行的方法
         String methodId = node.getMethodId();
 
         // 获取执行的参数
-        List<ProcessNodeEntity> processingEntityList = processNodeEntityService
-                .list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                        .eq(ProcessNodeEntity::getNodeId, processingId)
-                        .orderByAsc(ProcessNodeEntity::getArgOrder));
+        List<ProcessNodeEntity> processingEntityList = processNodeEntityService.listByNodeId(nodeId, true);
         // 获取所有需要构造的参数
         List<String> constructEntityIdList = processingEntityList.stream()
                 .filter(processingEntity -> NodeEntityGainTypeEnum.CONSTRUCT.equals(processingEntity.getGainType()))
@@ -227,13 +227,7 @@ public class ProcessNodeManager {
             }
             argList.add(tempArg);
         }
-        Object result = reflectMethodManager.invokeMethod(methodId, argList.toArray(new Object[0]));
-
-        // 校验返回结果
-        Class<?> returnType = Class.forName(node.getResultType());
-        Assert.isTrue(returnType.isInstance(result), () -> new PersipaCustomException(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION));
-
-        return result;
+        return reflectMethodManager.invokeMethod(methodId, argList.toArray(new Object[0]));
     }
 
     /**
@@ -249,12 +243,11 @@ public class ProcessNodeManager {
         String methodId = node.getMethodId();
         /// 校验方法存在
         ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
-        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+        Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
 
 
         // 校验方法的参数
-        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                .eq(ProcessNodeEntity::getNodeId, node.getId()));
+        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
         this.verifyNodeEntity(reflectMethod, nodeEntityList);
 
         // 校验通过则 刷新 ProcessConfig 的状态
@@ -290,12 +283,11 @@ public class ProcessNodeManager {
         if (methodList.size() != methodIdSet.size()) {
             nodeList.removeIf(node -> !reflectMethodMap.containsKey(node.getMethodId()));
         }
-        Assert.notEmpty(nodeList, () -> new PersipaRuntimeException(ProcessingExceptionEnum.METHOD_NOT_FOUND));
+        Assert.notEmpty(nodeList, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
 
         // 校验方法的参数
         for (ProcessNode node : nodeList) {
-            List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
-                    .eq(ProcessNodeEntity::getNodeId, node.getId()));
+            List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByNodeId(node.getId(), null);
             this.verifyNodeEntity(reflectMethodMap.get(node.getMethodId()), nodeEntityList);
             node.setNodeStatus(ProcessNodeStatusEnum.SAVED);
         }

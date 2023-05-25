@@ -33,7 +33,7 @@ public class ProcessNode {
     /**
      * 当前节点执行的类型
      */
-    private ProcessNodeTypeEnum processingType;
+    private ProcessNodeTypeEnum nodeType;
 
     /**
      * 当前节点在整个流程中所处的位置

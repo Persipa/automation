@@ -5,7 +5,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Mappings;
 import site.persipa.btbtt.pojo.process.ProcessConfig;
-import site.persipa.btbtt.pojo.process.dto.SpiderConfigDto;
+import site.persipa.btbtt.pojo.process.dto.ProcessConfigCloneDto;
+import site.persipa.btbtt.pojo.process.dto.ProcessConfigDto;
 
 /**
  * @author persipa
@@ -22,5 +23,8 @@ public interface MapProcessConfigMapper {
             @Mapping(target = "processStatus", ignore = true),
             @Mapping(target = "updateTime", ignore = true)
     })
-    ProcessConfig dto2Pojo(SpiderConfigDto dto);
+    ProcessConfig dto2Pojo(ProcessConfigDto dto);
+
+    @Mapping(target = "id", ignore = true)
+    ProcessConfigDto cloneDto2Dto(ProcessConfigCloneDto cloneDto);
 }

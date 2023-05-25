@@ -6,7 +6,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-public class ProcessingClassSearchDto {
+public class ReflectClassSearchDto {
 
 
     private String packageName;

@@ -18,7 +18,7 @@ public class EntityController {
     private final ReflectEntityManager reflectEntityManager;
 
     @PostMapping("/add")
-    public Result<Boolean> addEntity(@RequestBody ReflectEntityDto dto,
+    public Result<String> addEntity(@RequestBody ReflectEntityDto dto,
                                      @RequestParam(required = false, defaultValue = "false") boolean force) {
         return Result.success(reflectEntityManager.addEntity(dto, force));
     }

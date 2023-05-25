@@ -18,6 +18,8 @@ public enum ProcessExceptionEnum implements PersipaExceptionDef {
 
     CONFIG_NAME_DUPLICATE(770050103, "配置名称重复", ExceptionLevelEnum.EXCEPTION),
 
+    CONFIG_CLONE_FAILED(770050104, "配置复制失败", ExceptionLevelEnum.EXCEPTION),
+
     ;
 
     private final int code;

@@ -8,7 +8,7 @@ import javax.validation.constraints.NotBlank;
  * @author persipa
  */
 @Data
-public class ProcessingClassDto {
+public class ReflectClassDto {
 
     @NotBlank(message = "包名不可为空")
     private String packageName;
