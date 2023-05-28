@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.btbtt.enums.process.ProcessNodeReturnTypeEnum;
-import site.persipa.btbtt.enums.process.ProcessNodeTypeEnum;
 import site.persipa.btbtt.enums.process.ProcessNodeStatusEnum;
+import site.persipa.btbtt.enums.process.ProcessNodeTypeEnum;
 
 /**
  * 流程执行的节点，每个实例包含一个执行的动作，可以执行一个方法
@@ -41,19 +40,8 @@ public class ProcessNode {
     private Long sort;
 
     /**
-     * 当前节点执行后的结果类型，备用
-     */
-    private String resultType;
-
-    /**
      * 当前节点执行的方法
      */
     private String methodId;
-
-    private ProcessNodeReturnTypeEnum returnType;
-
-    private String viewMethodId;
-
-    //    private Boolean iteratorView;
 
 }

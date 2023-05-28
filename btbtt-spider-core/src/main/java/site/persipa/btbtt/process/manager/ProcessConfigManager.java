@@ -16,6 +16,7 @@ import site.persipa.btbtt.pojo.process.bo.ProcessResultBo;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigDto;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigPageDto;
+import site.persipa.btbtt.pojo.process.dto.ProcessResultDto;
 import site.persipa.btbtt.process.service.ProcessConfigService;
 import site.persipa.btbtt.process.service.ProcessNodeEntityService;
 import site.persipa.btbtt.process.service.ProcessNodeService;
@@ -125,8 +126,12 @@ public class ProcessConfigManager {
                 }
             } else {
                 // 保存结果
-                processResultManager.saveResult(configId, processResultBo);
-                return ProcessResultBo.success(null);
+                boolean success = processResultManager.saveResult(configId, processResultBo);
+                if (success) {
+                    return ProcessResultBo.success(processResultManager.list(new ProcessResultDto(configId, false)));
+                } else {
+                    return ProcessResultBo.success(null);
+                }
             }
         }
         return ProcessResultBo.fail();

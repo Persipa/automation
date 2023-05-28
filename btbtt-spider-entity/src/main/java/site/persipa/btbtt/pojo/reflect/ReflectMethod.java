@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import site.persipa.btbtt.enums.reflect.MethodResultTypeEnum;
 
 /**
  * 反射的方法
@@ -48,9 +49,14 @@ public class ReflectMethod {
     private Boolean variableArgs;
 
     /**
-     * 返回类型
+     * 返回值的类
      */
     private String returnType;
+
+    /**
+     * 方法返回的类型
+     */
+    private MethodResultTypeEnum resultType;
 
     /**
      * 是否返回可遍历结果

@@ -1,5 +1,6 @@
 package site.persipa.btbtt.process.manager;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,16 @@ public class ProcessResultManager {
        return processResultService.update(Wrappers.lambdaUpdate(ProcessResult.class)
                 .set(ProcessResult::getUsed, true)
                 .eq(ProcessResult::getConfigId, configId)
+                .eq(ProcessResult::getUsed, false));
+    }
+
+    public boolean read(List<String> resultIdList) {
+        if (CollUtil.isEmpty(resultIdList)) {
+            return false;
+        }
+        return processResultService.update(Wrappers.lambdaUpdate(ProcessResult.class)
+                .set(ProcessResult::getUsed, true)
+                .in(ProcessResult::getId, resultIdList)
                 .eq(ProcessResult::getUsed, false));
     }
 

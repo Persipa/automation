@@ -34,4 +34,9 @@ public class ProcessResultController {
     public Result<Boolean> read(@PathVariable("configId") String configId) {
         return Result.success(processResultManager.read(configId));
     }
+
+    @PostMapping("/read")
+    public Result<Boolean> read(@RequestBody List<String> resultIds) {
+        return Result.success(processResultManager.read(resultIds));
+    }
 }

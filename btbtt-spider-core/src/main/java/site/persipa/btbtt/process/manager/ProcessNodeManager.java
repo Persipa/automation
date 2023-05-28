@@ -80,7 +80,6 @@ public class ProcessNodeManager {
         String methodId = processNode.getMethodId();
         ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
         Assert.notNull(reflectMethod, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
-        processNode.setResultType(reflectMethod.getReturnType());
 
         processNodeService.saveOrUpdate(processNode);
         String nodeId = processNode.getId();
@@ -160,8 +159,8 @@ public class ProcessNodeManager {
     }
 
     public Object execute(ProcessNode node, Object o) throws ClassNotFoundException, PersipaCustomException {
-        ProcessNodeTypeEnum processType = node.getNodeType();
-        switch (processType) {
+        ProcessNodeTypeEnum nodeType = node.getNodeType();
+        switch (nodeType) {
             case SEQUENTIAL:
                 o = this.executeProcessNode(node.getId(), o);
                 break;
@@ -179,8 +178,8 @@ public class ProcessNodeManager {
                 Assert.isTrue(o != null && o.getClass().isArray(),
                         () -> new PersipaCustomException(ProcessingExceptionEnum.CLASS_TYPE_NOT_MATCH_EXCEPTION));
                 int length = Array.getLength(o);
-                Class<?> resultType = Class.forName(node.getResultType());
-                Object resultArray = Array.newInstance(resultType, length);
+                Class<?> componentType = o.getClass().getComponentType();
+                Object resultArray = Array.newInstance(componentType, length);
                 for (int i = 0; i < length; i++) {
                     Object singleResult = this.executeProcessNode(node.getId(), Array.get(o, i));
                     Array.set(resultArray, i, singleResult);
