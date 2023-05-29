@@ -5,8 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigCloneDto;
-import site.persipa.btbtt.pojo.process.dto.ProcessConfigPageDto;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigDto;
+import site.persipa.btbtt.pojo.process.dto.ProcessConfigPageDto;
+import site.persipa.btbtt.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.btbtt.process.manager.ProcessConfigManager;
 import site.persipa.cloud.pojo.page.dto.PageDto;
 import site.persipa.cloud.pojo.rest.model.Result;
@@ -38,9 +39,14 @@ public class ProcessConfigController {
         return Result.success(processConfigManager.page(pageDto));
     }
 
+    @PostMapping("/preview/{configId}")
+    public Result<ProcessResultPreviewVo> preview(@PathVariable("configId")String configId) {
+        return Result.success(processConfigManager.previewResult(configId));
+    }
+
     @PostMapping("/execute/{configId}")
     public Result<Object> execute(@PathVariable("configId") String configId,
-                                  @RequestParam(required = false, defaultValue = "false") Boolean preview) {
+                                           @RequestParam(required = false, defaultValue = "false") Boolean preview) {
         return Result.success(processConfigManager.execute(configId, preview));
     }
 

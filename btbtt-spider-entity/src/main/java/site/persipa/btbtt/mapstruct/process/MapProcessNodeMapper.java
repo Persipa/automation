@@ -15,9 +15,7 @@ public interface MapProcessNodeMapper {
 
     @Mappings({
             @Mapping(target = "nodeStatus", ignore = true),
-            @Mapping(target = "resultType", ignore = true),
-            @Mapping(target = "returnType", ignore = true),
-            @Mapping(target = "viewMethodId", ignore = true)
+            @Mapping(target = "nodeType", ignore = true)
     })
     ProcessNode fromDto(ProcessNodeDto dto);
 }

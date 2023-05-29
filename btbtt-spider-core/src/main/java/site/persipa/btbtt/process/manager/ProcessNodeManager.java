@@ -158,7 +158,7 @@ public class ProcessNodeManager {
         return processNodeService.listByConfigId(configId, true);
     }
 
-    public Object execute(ProcessNode node, Object o) throws ClassNotFoundException, PersipaCustomException {
+    public Object execute(ProcessNode node, Object o) throws PersipaCustomException {
         ProcessNodeTypeEnum nodeType = node.getNodeType();
         switch (nodeType) {
             case SEQUENTIAL:
@@ -192,7 +192,7 @@ public class ProcessNodeManager {
         return o;
     }
 
-    private Object executeProcessNode(String nodeId, Object inputArg) throws ClassNotFoundException, PersipaCustomException {
+    private Object executeProcessNode(String nodeId, Object inputArg) throws PersipaCustomException {
         ProcessNode node = processNodeService.getById(nodeId);
         // 获取执行的方法
         String methodId = node.getMethodId();

@@ -16,12 +16,18 @@ public class ProcessResultBo {
 
     private Object result;
 
+    private String message;
+
 
     public static ProcessResultBo success(Object result) {
-        return new ProcessResultBo(true, result);
+        return new ProcessResultBo(true, result, null);
     }
 
     public static ProcessResultBo fail() {
         return new ProcessResultBo();
+    }
+
+    public static ProcessResultBo fail(String message) {
+        return new ProcessResultBo(false, null, message);
     }
 }

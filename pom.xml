@@ -56,6 +56,13 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <mainClass>site.persipa.btbtt.BtbttSpider7005</mainClass>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
     </build>

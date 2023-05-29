@@ -1,5 +1,6 @@
 package site.persipa.btbtt.reflect.manager;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ReflectUtil;
 import lombok.RequiredArgsConstructor;
@@ -7,12 +8,15 @@ import org.springframework.stereotype.Component;
 import site.persipa.btbtt.enums.exception.ReflectExceptionEnum;
 import site.persipa.btbtt.pojo.reflect.ReflectMethod;
 import site.persipa.btbtt.pojo.reflect.ReflectMethodArg;
+import site.persipa.btbtt.pojo.reflect.dto.ReflectMethodDto;
 import site.persipa.btbtt.reflect.service.ReflectClassService;
 import site.persipa.btbtt.reflect.service.ReflectMethodArgService;
 import site.persipa.btbtt.reflect.service.ReflectMethodService;
 import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,42 @@ public class ReflectMethodManager {
 
     private final ReflectMethodArgService reflectMethodArgService;
 
+    public String add(ReflectMethodDto dto) {
+        String classId = dto.getClassId();
+        Class<?> clazz = reflectClassService.getClazz(classId);
+        Assert.notNull(clazz, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_CLASS_NOT_FOUND));
+
+        Class<?>[] paramTypes = null;
+        if (CollUtil.isNotEmpty(dto.getArgClassIds())) {
+            List<Class<?>> argClassList = reflectClassService.getClazz(dto.getArgClassIds());
+            paramTypes = argClassList.toArray(new Class[0]);
+        }
+        Method method;
+        try {
+            method = clazz.getDeclaredMethod(dto.getMethodName(), paramTypes);
+        } catch (NoSuchMethodException e) {
+            throw new PersipaRuntimeException(ReflectExceptionEnum.NO_SUCH_METHOD_EXCEPTION, dto.getMethodName());
+        }
+        ReflectMethod reflectMethod = new ReflectMethod();
+        reflectMethod.setClassId(classId);
+        reflectMethod.setClassName(clazz.getName());
+        reflectMethod.setMethodName(method.getName());
+        reflectMethod.setStaticMethod(Modifier.isStatic(method.getModifiers()));
+
+        int argCount = paramTypes == null ? 0 : paramTypes.length;
+        reflectMethod.setArgCount(argCount);
+        reflectMethod.setReturnType(method.getReturnType().getName());
+
+        reflectMethodService.save(reflectMethod);
+        return reflectMethod.getId();
+    }
+
+    /**
+     * 将方法id 转换为反射的方法
+     * @param methodId 方法id
+     * @return 某个可执行的方法
+     * @throws PersipaCustomException 转换失败抛出异常
+     */
     private Method parseMethod(String methodId) throws PersipaCustomException {
         ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
         if (reflectMethod == null) {
@@ -62,7 +102,7 @@ public class ReflectMethodManager {
         return ReflectUtil.getMethod(clazz, reflectMethod.getMethodName(), argClassArr);
     }
 
-    public Object invokeMethod(String methodId, Object... args) throws PersipaCustomException, ClassNotFoundException {
+    public Object invokeMethod(String methodId, Object... args) throws PersipaCustomException {
         ReflectMethod reflectMethod = reflectMethodService.getById(methodId);
         Method method = this.parseMethod(methodId);
         Assert.notNull(method, () -> new PersipaCustomException(ReflectExceptionEnum.REFLECT_METHOD_NOT_FOUND));
@@ -89,9 +129,13 @@ public class ReflectMethodManager {
 
         // 校验返回值
         String returnType = reflectMethod.getReturnType();
-        Class<?> returnClass = Class.forName(returnType);
-        if (!returnClass.isInstance(result)) {
-            throw new PersipaCustomException(ReflectExceptionEnum.REFLECT_METHOD_RETURN_TYPE_INCORRECT);
+        try {
+            Class<?> returnClass = Class.forName(returnType);
+            if (!returnClass.isInstance(result)) {
+                throw new PersipaCustomException(ReflectExceptionEnum.REFLECT_METHOD_RETURN_TYPE_INCORRECT);
+            }
+        } catch (ClassNotFoundException e) {
+            throw new PersipaCustomException(ReflectExceptionEnum.CLASS_NOT_FOUND_EXCEPTION, returnType);
         }
         return result;
     }

@@ -9,14 +9,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import site.persipa.btbtt.enums.exception.ProcessExceptionEnum;
 import site.persipa.btbtt.enums.process.ProcessConfigStatusEnum;
+import site.persipa.btbtt.enums.process.ProcessTypeEnum;
 import site.persipa.btbtt.mapstruct.process.MapProcessConfigMapper;
+import site.persipa.btbtt.mapstruct.process.MapProcessResultMapper;
 import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.ProcessNode;
-import site.persipa.btbtt.pojo.process.bo.ProcessResultBo;
+import site.persipa.btbtt.pojo.process.bo.ProcessExecuteResultBo;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigDto;
 import site.persipa.btbtt.pojo.process.dto.ProcessConfigPageDto;
-import site.persipa.btbtt.pojo.process.dto.ProcessResultDto;
+import site.persipa.btbtt.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.btbtt.process.service.ProcessConfigService;
 import site.persipa.btbtt.process.service.ProcessNodeEntityService;
 import site.persipa.btbtt.process.service.ProcessNodeService;
@@ -47,6 +49,8 @@ public class ProcessConfigManager {
     private final ProcessManager processManager;
 
     private final MapProcessConfigMapper mapProcessConfigMapper;
+
+    private final MapProcessResultMapper mapProcessResultMapper;
 
     @Transactional(rollbackFor = Exception.class)
     public String addConfig(ProcessConfigDto processConfigDto) {
@@ -97,11 +101,49 @@ public class ProcessConfigManager {
         return configId;
     }
 
+    public ProcessResultPreviewVo previewResult(String configId) {
+        ProcessExecuteResultBo processResultBo = processManager.execute(configId, ProcessTypeEnum.PREVIEW);
+        ProcessResultPreviewVo previewVo = mapProcessResultMapper.executeResultBoToPreviewVo(processResultBo);
+        if (processResultBo.isExecuteSuccess()) {
+            Object processResult = previewVo.getResult();
+            boolean canSerialize = true;
+            if (processResult instanceof Iterable) {
+                for (Object o : (Iterable<?>) processResult) {
+                    if (!(o instanceof Serializable)) {
+                        canSerialize = false;
+                        break;
+                    }
+                }
+            } else if (processResult != null && processResult.getClass().isArray()) {
+                int length = Array.getLength(processResult);
+                for (int i = 0; i < length; i++) {
+                    if (!(Array.get(processResult, i) instanceof Serializable)) {
+                        canSerialize = false;
+                        break;
+                    }
+                }
+            }
+            if (!canSerialize) {
+                previewVo.setResult(processResult.toString());
+            }
+        }
+        return previewVo;
+    }
+
+    public ProcessExecuteResultBo execute(String configId) {
+        ProcessExecuteResultBo executeResultBo = processManager.execute(configId, ProcessTypeEnum.MANUAL);
+        if (executeResultBo.isExecuteSuccess()) {
+            // 保存结果
+            processResultManager.saveResult(executeResultBo);
+        }
+        return executeResultBo;
+    }
+
     public Object execute(String configId, boolean preview) {
-        ProcessResultBo processResultBo = processManager.execute(configId);
-        if (processResultBo.isSuccess()) {
+        ProcessExecuteResultBo executeResultBo = processManager.execute(configId, ProcessTypeEnum.MANUAL);
+        if (executeResultBo.isExecuteSuccess()) {
             if (preview) {
-                Object processResult = processResultBo.getResult();
+                Object processResult = executeResultBo.getResult();
                 boolean canSerialize = true;
                 if (processResult instanceof Iterable) {
                     for (Object o : (Iterable<?>) processResult) {
@@ -120,21 +162,16 @@ public class ProcessConfigManager {
                     }
                 }
                 if (canSerialize) {
-                    return processResultBo.getResult();
+                    return executeResultBo.getResult();
                 } else {
-                    return processResultBo.getResult().toString();
+                    return executeResultBo.getResult().toString();
                 }
             } else {
                 // 保存结果
-                boolean success = processResultManager.saveResult(configId, processResultBo);
-                if (success) {
-                    return ProcessResultBo.success(processResultManager.list(new ProcessResultDto(configId, false)));
-                } else {
-                    return ProcessResultBo.success(null);
-                }
+                processResultManager.saveResult(executeResultBo);
             }
         }
-        return ProcessResultBo.fail();
+        return executeResultBo;
     }
 
     public Page<ProcessConfig> page(PageDto<ProcessConfigPageDto> pageDto) {
