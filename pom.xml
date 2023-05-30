@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>btbtt-spider</artifactId>
+    <artifactId>automation</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <parent>
@@ -14,8 +14,8 @@
     </parent>
 
     <modules>
-        <module>btbtt-spider-entity</module>
-        <module>btbtt-spider-core</module>
+        <module>automation-entity</module>
+        <module>automation-core</module>
     </modules>
 
     <dependencyManagement>
@@ -60,7 +60,7 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <configuration>
-                        <mainClass>site.persipa.btbtt.BtbttSpider7005</mainClass>
+                        <mainClass>site.persipa.automation.AutomationApplication</mainClass>
                     </configuration>
                 </plugin>
             </plugins>
