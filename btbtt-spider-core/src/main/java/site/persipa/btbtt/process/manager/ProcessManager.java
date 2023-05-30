@@ -35,10 +35,12 @@ public class ProcessManager {
     private final ProcessConfigService processConfigService;
 
     private final ProcessNodeService processNodeService;
-    
+
     private final ProcessNodeManager processNodeManager;
 
     private final ProcessLogService processLogService;
+
+    private final ProcessResultManager processResultManager;
 
     private final StringRedisTemplate redisTemplate;
 
@@ -58,7 +60,7 @@ public class ProcessManager {
         ProcessResultBo processResultBo = this.execute(configId);
         processLogService.completeLog(logId, processResultBo.isSuccess());
 
-        ProcessExecuteResultBo resultBo = mapProcessResultMapper.resultBoToExecuteResultBo(configId, processResultBo);
+        ProcessExecuteResultBo resultBo = mapProcessResultMapper.resultBoToExecuteResultBo(configId, logId, processResultBo);
         // 如果成功 计算结果
         if (processResultBo.isSuccess() && processResultBo.getResult() != null) {
             Object o = processResultBo.getResult();
@@ -71,6 +73,9 @@ public class ProcessManager {
                 resultCount = 1;
             }
             resultBo.setResultCount(resultCount);
+        }
+        if (processType.isSaveResult()) {
+            processResultManager.saveResult(resultBo);
         }
 
         // 释放redis 锁

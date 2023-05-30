@@ -15,22 +15,22 @@ public enum ProcessTypeEnum {
     /**
      * 自动执行
      */
-    AUTO(1, "auto"),
+    AUTO(1, "auto", true),
 
     /**
      * 手动执行
      */
-    MANUAL(2, "manual"),
+    MANUAL(2, "manual", true),
 
     /**
      * 预览
      */
-    PREVIEW(21, "preview"),
+    PREVIEW(21, "preview", false),
 
     /**
      * 测试
      */
-    TEST(22, "test"),
+    TEST(22, "test", false),
 
     ;
 
@@ -39,5 +39,7 @@ public enum ProcessTypeEnum {
 
     @JsonValue
     private final String value;
+
+    private final boolean saveResult;
 
 }

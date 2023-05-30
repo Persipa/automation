@@ -82,6 +82,7 @@ public class ProcessResultManager {
                     }
                     ProcessResult tempResult = new ProcessResult();
                     tempResult.setConfigId(executeResultBo.getConfigId());
+                    tempResult.setLogId(executeResultBo.getLogId());
                     tempResult.setResult(o.toString());
                     processResultList.add(tempResult);
                 }
@@ -95,6 +96,7 @@ public class ProcessResultManager {
                         }
                         ProcessResult tempResult = new ProcessResult();
                         tempResult.setConfigId(executeResultBo.getConfigId());
+                        tempResult.setLogId(executeResultBo.getLogId());
                         tempResult.setResult(o.toString());
                         processResultList.add(tempResult);
                     }
@@ -104,6 +106,7 @@ public class ProcessResultManager {
                 if (!existResultContentSet.contains(o.toString())) {
                     ProcessResult tempResult = new ProcessResult();
                     tempResult.setConfigId(executeResultBo.getConfigId());
+                    tempResult.setLogId(executeResultBo.getLogId());
                     tempResult.setResult(o.toString());
                     processResultList.add(tempResult);
                 }
@@ -116,6 +119,7 @@ public class ProcessResultManager {
 
     }
 
+    @Deprecated
     public boolean saveResult(String configId, ProcessResultBo processResultBo) {
         List<ProcessResult> existResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
                 .eq(ProcessResult::getConfigId, configId));

@@ -5,6 +5,7 @@ import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +14,13 @@ import site.persipa.btbtt.enums.reflect.BasicDataTypeEnum;
 import site.persipa.btbtt.enums.reflect.PackagingDataTypeEnum;
 import site.persipa.btbtt.enums.reflect.ReflectEntityConstructorType;
 import site.persipa.btbtt.mapstruct.reflect.MapReflectEntityMapper;
+import site.persipa.btbtt.pojo.process.ProcessNodeEntity;
 import site.persipa.btbtt.pojo.reflect.ReflectClass;
 import site.persipa.btbtt.pojo.reflect.ReflectEntity;
 import site.persipa.btbtt.pojo.reflect.ReflectEntityConstructor;
 import site.persipa.btbtt.pojo.reflect.dto.ReflectEntityDto;
 import site.persipa.btbtt.pojo.reflect.vo.ReflectEntityPreviewVo;
+import site.persipa.btbtt.process.service.ProcessNodeEntityService;
 import site.persipa.btbtt.reflect.service.ReflectClassService;
 import site.persipa.btbtt.reflect.service.ReflectEntityConstructorService;
 import site.persipa.btbtt.reflect.service.ReflectEntityService;
@@ -44,6 +47,8 @@ public class ReflectEntityManager {
     private final ReflectEntityService reflectEntityService;
 
     private final ReflectEntityConstructorService reflectEntityConstructorService;
+
+    private final ProcessNodeEntityService processNodeEntityService;
 
     private final MapReflectEntityMapper mapReflectEntityMapper;
 
@@ -75,7 +80,12 @@ public class ReflectEntityManager {
         // 非强制保存的情况，则尝试构造
         if (success && !force) {
             try {
-                this.construct(entityId);
+                Object entity = this.construct(entityId);
+                if (entity != null) {
+                    reflectEntityService.update(Wrappers.lambdaUpdate(ReflectEntity.class)
+                            .set(ReflectEntity::getPreviewValue, entity.toString())
+                            .eq(ReflectEntity::getId, entityId));
+                }
             } catch (PersipaCustomException e) {
                 throw new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_CONSTRUCT_FAIL);
             }
@@ -84,6 +94,20 @@ public class ReflectEntityManager {
         return entityId;
     }
 
+    public boolean remove(String entityId) {
+        ReflectEntity reflectEntity = reflectEntityService.getById(entityId);
+        Assert.notNull(reflectEntity, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
+
+        List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByEntityId(entityId);
+        if (!nodeEntityList.isEmpty()) {
+            throw new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_IN_USE);
+        }
+
+        List<ReflectEntity> deleteEntityList = reflectEntityService.allSubEntityList(entityId);
+        deleteEntityList.add(reflectEntity);
+
+        return reflectEntityService.removeBatchByIds(deleteEntityList);
+    }
 
     public ReflectEntityPreviewVo preview(String entityId) {
         // 实例信息

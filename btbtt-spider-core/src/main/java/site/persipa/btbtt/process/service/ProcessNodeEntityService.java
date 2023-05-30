@@ -13,5 +13,7 @@ public interface ProcessNodeEntityService extends IService<ProcessNodeEntity> {
 
     List<ProcessNodeEntity> listByNodeId(String nodeId, Boolean argOrderAsc);
 
+    List<ProcessNodeEntity> listByEntityId(String entityId);
+
     boolean cloneNodeEntityList(Map<String, String> entityCloneMap);
 }

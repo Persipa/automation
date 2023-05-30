@@ -28,6 +28,11 @@ public class ReflectEntity {
     private String entityValue;
 
     /**
+     * 预览的值
+     */
+    private String previewValue;
+
+    /**
      * 父实例的id
      */
     private String parentId;

@@ -7,6 +7,8 @@ import org.mapstruct.Mappings;
 import site.persipa.btbtt.enums.process.NodeEntityGainTypeEnum;
 import site.persipa.btbtt.pojo.process.ProcessNodeEntity;
 import site.persipa.btbtt.pojo.process.dto.ProcessNodeEntityDto;
+import site.persipa.btbtt.pojo.process.vo.ProcessNodeEntityVo;
+import site.persipa.btbtt.pojo.reflect.ReflectEntity;
 
 /**
  * @author persipa
@@ -23,4 +25,5 @@ public interface MapProcessNodeEntityMapper {
         return NodeEntityGainTypeEnum.VALUE_HELPER.find(gainTypeStr, null);
     }
 
+    ProcessNodeEntityVo toVo(ProcessNodeEntity nodeEntity, ReflectEntity reflectEntity);
 }

@@ -3,8 +3,8 @@ package site.persipa.btbtt.process.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import site.persipa.btbtt.pojo.process.ProcessNode;
 import site.persipa.btbtt.pojo.process.dto.ProcessNodeDto;
+import site.persipa.btbtt.pojo.process.vo.ProcessNodeVo;
 import site.persipa.btbtt.process.manager.ProcessNodeManager;
 import site.persipa.cloud.pojo.rest.model.Result;
 
@@ -31,7 +31,7 @@ public class ProcessNodeController {
     }
 
     @GetMapping("/listByConfigId/{configId}")
-    public Result<List<ProcessNode>> listByConfigId(@PathVariable("configId") String configId) {
+    public Result<List<ProcessNodeVo>> listByConfigId(@PathVariable("configId") String configId) {
         return Result.success(processNodeManager.listByConfigId(configId));
     }
 

@@ -14,6 +14,8 @@ public class ProcessExecuteResultBo {
 
     private boolean executeSuccess;
 
+    private String logId;
+
     private String message;
 
     private Integer resultCount;

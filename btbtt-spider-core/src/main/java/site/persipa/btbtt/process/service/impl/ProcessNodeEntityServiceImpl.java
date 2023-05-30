@@ -28,6 +28,12 @@ public class ProcessNodeEntityServiceImpl extends ServiceImpl<ProcessNodeEntityM
     }
 
     @Override
+    public List<ProcessNodeEntity> listByEntityId(String entityId){
+        return this.list(Wrappers.lambdaQuery(ProcessNodeEntity.class)
+                .eq(ProcessNodeEntity::getEntityId, entityId));
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean cloneNodeEntityList(Map<String, String> entityCloneMap) {
         // 查询所有节点的参数实例

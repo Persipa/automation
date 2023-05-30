@@ -44,8 +44,6 @@ public class ProcessConfigManager {
 
     private final ProcessNodeEntityService processNodeEntityService;
 
-    private final ProcessResultManager processResultManager;
-
     private final ProcessManager processManager;
 
     private final MapProcessConfigMapper mapProcessConfigMapper;
@@ -130,48 +128,9 @@ public class ProcessConfigManager {
         return previewVo;
     }
 
-    public ProcessExecuteResultBo execute(String configId) {
+    public Boolean execute(String configId) {
         ProcessExecuteResultBo executeResultBo = processManager.execute(configId, ProcessTypeEnum.MANUAL);
-        if (executeResultBo.isExecuteSuccess()) {
-            // 保存结果
-            processResultManager.saveResult(executeResultBo);
-        }
-        return executeResultBo;
-    }
-
-    public Object execute(String configId, boolean preview) {
-        ProcessExecuteResultBo executeResultBo = processManager.execute(configId, ProcessTypeEnum.MANUAL);
-        if (executeResultBo.isExecuteSuccess()) {
-            if (preview) {
-                Object processResult = executeResultBo.getResult();
-                boolean canSerialize = true;
-                if (processResult instanceof Iterable) {
-                    for (Object o : (Iterable<?>) processResult) {
-                        if (!(o instanceof Serializable)) {
-                            canSerialize = false;
-                            break;
-                        }
-                    }
-                } else if (processResult != null && processResult.getClass().isArray()) {
-                    int length = Array.getLength(processResult);
-                    for (int i = 0; i < length; i++) {
-                        if (!(Array.get(processResult, i) instanceof Serializable)) {
-                            canSerialize = false;
-                            break;
-                        }
-                    }
-                }
-                if (canSerialize) {
-                    return executeResultBo.getResult();
-                } else {
-                    return executeResultBo.getResult().toString();
-                }
-            } else {
-                // 保存结果
-                processResultManager.saveResult(executeResultBo);
-            }
-        }
-        return executeResultBo;
+        return executeResultBo.isExecuteCompleted() && executeResultBo.isExecuteSuccess();
     }
 
     public Page<ProcessConfig> page(PageDto<ProcessConfigPageDto> pageDto) {

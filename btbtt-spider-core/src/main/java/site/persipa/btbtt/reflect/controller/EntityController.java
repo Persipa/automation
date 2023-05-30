@@ -23,6 +23,11 @@ public class EntityController {
         return Result.success(reflectEntityManager.addEntity(dto, force));
     }
 
+    @PostMapping("/remove/{entityId}")
+    public Result<Boolean> removeEntity(@PathVariable("entityId") String entityId) {
+        return Result.success(reflectEntityManager.remove(entityId));
+    }
+
     @GetMapping("/preview/{entityId}")
     public Result<ReflectEntityPreviewVo> previewEntity(@PathVariable("entityId") String entityId) {
         return Result.success(reflectEntityManager.preview(entityId));

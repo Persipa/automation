@@ -45,9 +45,8 @@ public class ProcessConfigController {
     }
 
     @PostMapping("/execute/{configId}")
-    public Result<Object> execute(@PathVariable("configId") String configId,
-                                           @RequestParam(required = false, defaultValue = "false") Boolean preview) {
-        return Result.success(processConfigManager.execute(configId, preview));
+    public Result<Boolean> execute(@PathVariable("configId") String configId) {
+        return Result.success(processConfigManager.execute(configId));
     }
 
 }

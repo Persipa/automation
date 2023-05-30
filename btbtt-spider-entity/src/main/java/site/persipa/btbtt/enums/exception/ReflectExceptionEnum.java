@@ -38,6 +38,8 @@ public enum ReflectExceptionEnum implements PersipaExceptionDef {
 
     REFLECT_ENTITY_NOT_FOUND(999, "反射实例不存在", ExceptionLevelEnum.EXCEPTION),
 
+    REFLECT_ENTITY_IN_USE(999, "反射实例正在使用", ExceptionLevelEnum.WARNING),
+
     /**
      * 原生反射方法操作异常
      *

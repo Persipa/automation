@@ -22,9 +22,9 @@ public interface MapProcessResultMapper {
     ProcessResultPreviewVo executeResultBoToPreviewVo(ProcessExecuteResultBo executeResultBo);
 
     @Mappings({
-            @Mapping(target = "executeCompleted",constant = "true"),
+            @Mapping(target = "executeCompleted", constant = "true"),
             @Mapping(target = "executeSuccess", source = "resultBo.success"),
             @Mapping(target = "resultCount", ignore = true)
     })
-    ProcessExecuteResultBo resultBoToExecuteResultBo(String configId, ProcessResultBo resultBo);
+    ProcessExecuteResultBo resultBoToExecuteResultBo(String configId, String logId, ProcessResultBo resultBo);
 }

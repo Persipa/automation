@@ -22,6 +22,8 @@ public class ProcessResult {
 
     private String result;
 
+    private String logId;
+
     private Boolean used;
 
     @TableField(fill = FieldFill.INSERT)

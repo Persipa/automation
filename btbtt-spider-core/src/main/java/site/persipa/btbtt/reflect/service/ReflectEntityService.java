@@ -11,4 +11,6 @@ import java.util.List;
 public interface ReflectEntityService extends IService<ReflectEntity> {
 
     List<ReflectEntity> subEntityList(String entityId);
+
+    List<ReflectEntity> allSubEntityList(String entityId);
 }

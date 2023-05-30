@@ -1,6 +1,7 @@
 package site.persipa.btbtt.process.manager;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,8 @@ import site.persipa.btbtt.pojo.process.ProcessConfig;
 import site.persipa.btbtt.pojo.process.ProcessNode;
 import site.persipa.btbtt.pojo.process.ProcessNodeEntity;
 import site.persipa.btbtt.pojo.process.dto.ProcessNodeDto;
+import site.persipa.btbtt.pojo.process.vo.ProcessNodeEntityVo;
+import site.persipa.btbtt.pojo.process.vo.ProcessNodeVo;
 import site.persipa.btbtt.pojo.reflect.ReflectEntity;
 import site.persipa.btbtt.pojo.reflect.ReflectMethod;
 import site.persipa.btbtt.process.service.ProcessConfigService;
@@ -154,8 +157,45 @@ public class ProcessNodeManager {
                 () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
     }
 
-    public List<ProcessNode> listByConfigId(String configId) {
-        return processNodeService.listByConfigId(configId, true);
+    public List<ProcessNodeVo> listByConfigId(String configId) {
+        // 配置
+        ProcessConfig processConfig = processConfigService.getById(configId);
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+        // 节点
+        List<ProcessNode> nodeList = processNodeService.listByConfigId(configId, true);
+        // 执行的方法
+        Set<String> methodIdSet = nodeList.stream()
+                .map(ProcessNode::getMethodId)
+                .collect(Collectors.toSet());
+        List<ReflectMethod> methodList = reflectMethodService.listByIds(methodIdSet);
+        Map<String, ReflectMethod> reflectMethodMap = methodList.stream()
+                .collect(Collectors.toMap(ReflectMethod::getId, Function.identity(), (k1, k2) -> k1));
+        // 方法执行的参数
+        List<ProcessNodeVo> result = new ArrayList<>();
+        for (ProcessNode node : nodeList) {
+            List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByNodeId(node.getId(), true);
+            Set<String> entityIdSet = nodeEntityList.stream()
+                    .map(ProcessNodeEntity::getEntityId)
+                    .filter(StrUtil::isNotEmpty)
+                    .collect(Collectors.toSet());
+
+            // 参数实体
+            Map<String,ReflectEntity> reflectEntityMap;
+            if (!entityIdSet.isEmpty()) {
+                List<ReflectEntity> reflectEntityList = reflectEntityService.listByIds(entityIdSet);
+                reflectEntityMap = reflectEntityList.stream()
+                        .collect(Collectors.toMap(ReflectEntity::getId, Function.identity(), (k1, k2) -> k1));
+            } else {
+                reflectEntityMap = Collections.emptyMap();
+            }
+
+            List<ProcessNodeEntityVo> nodeEntityVoList = nodeEntityList.stream()
+                    .map(nodeEntity -> mapProcessNodeEntityMapper.toVo(nodeEntity, reflectEntityMap.get(nodeEntity.getEntityId())))
+                    .collect(Collectors.toList());
+            ProcessNodeVo vo = mapProcessNodeMapper.toVo(processConfig, node, reflectMethodMap.get(node.getMethodId()), nodeEntityVoList);
+            result.add(vo);
+        }
+        return result;
     }
 
     public Object execute(ProcessNode node, Object o) throws PersipaCustomException {
