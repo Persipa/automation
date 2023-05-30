@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author persipa
  */
 @SpringBootApplication
-
 public class AutomationApplication {
 
     public static void main(String[] args) {

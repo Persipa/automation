@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * @author persipa
  */
 @Configuration
-@MapperScan("site.persipa.btbtt.**.mapper")
+@MapperScan("site.persipa.automation.**.mapper")
 public class MybatisPlusConfiguration {
 
     @Bean

@@ -1,7 +1,7 @@
 package site.persipa.automation.process.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
@@ -18,11 +18,11 @@ import javax.validation.Valid;
  * @author persipa
  */
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/process/config")
 public class ProcessConfigController {
 
-    @Autowired
-    private ProcessConfigManager processConfigManager;
+    private final ProcessConfigManager processConfigManager;
 
     @PostMapping("/add")
     public Result<String> addConfig(@Valid @RequestBody ProcessConfigDto processConfigDto) {
