@@ -4,9 +4,9 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
 import site.persipa.automation.pojo.process.ProcessResult;
-import site.persipa.automation.pojo.process.bo.ProcessExecuteResultBo;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessResultDto;
 import site.persipa.automation.pojo.process.vo.ProcessResultCombineVo;
@@ -66,107 +66,56 @@ public class ProcessResultManager {
                 .eq(ProcessResult::getUsed, false));
     }
 
-    public boolean saveResult(ProcessExecuteResultBo executeResultBo) {
+    public Integer saveResult(ProcessResultBo processResultBo) {
         List<ProcessResult> existResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(ProcessResult::getConfigId, executeResultBo.getConfigId()));
+                .eq(ProcessResult::getConfigId, processResultBo.getConfigId()));
         Set<String> existResultContentSet = existResultList.stream()
                 .map(ProcessResult::getResult)
                 .collect(Collectors.toSet());
-        if (executeResultBo.isExecuteSuccess()) {
+        Object resultObject = processResultBo.getResult();
+        if (ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus()) && resultObject != null) {
             List<ProcessResult> processResultList = new ArrayList<>();
-            Object processResult = executeResultBo.getResult();
-            if (processResult instanceof Iterable) {
-                for (Object o : (Iterable<?>) processResult) {
+            if (resultObject instanceof Iterable) {
+                for (Object o : (Iterable<?>) resultObject) {
                     if (existResultContentSet.contains(o.toString())) {
                         continue;
                     }
                     ProcessResult tempResult = new ProcessResult();
-                    tempResult.setConfigId(executeResultBo.getConfigId());
-                    tempResult.setLogId(executeResultBo.getLogId());
+                    tempResult.setConfigId(processResultBo.getConfigId());
+                    tempResult.setLogId(processResultBo.getLogId());
                     tempResult.setResult(o.toString());
                     processResultList.add(tempResult);
                 }
-            } else if (processResult != null && processResult.getClass().isArray()) {
-                int length = Array.getLength(processResult);
+            } else if (resultObject.getClass().isArray()) {
+                int length = Array.getLength(resultObject);
                 for (int i = 0; i < length; i++) {
-                    Object o = Array.get(processResult, i);
+                    Object o = Array.get(resultObject, i);
                     if (!(o instanceof Serializable)) {
                         if (existResultContentSet.contains(o.toString())) {
                             continue;
                         }
                         ProcessResult tempResult = new ProcessResult();
-                        tempResult.setConfigId(executeResultBo.getConfigId());
-                        tempResult.setLogId(executeResultBo.getLogId());
+                        tempResult.setConfigId(processResultBo.getConfigId());
+                        tempResult.setLogId(processResultBo.getLogId());
                         tempResult.setResult(o.toString());
                         processResultList.add(tempResult);
                     }
                 }
             } else {
-                Object o = executeResultBo.getResult();
-                if (!existResultContentSet.contains(o.toString())) {
+                if (!existResultContentSet.contains(resultObject.toString())) {
                     ProcessResult tempResult = new ProcessResult();
-                    tempResult.setConfigId(executeResultBo.getConfigId());
-                    tempResult.setLogId(executeResultBo.getLogId());
-                    tempResult.setResult(o.toString());
+                    tempResult.setConfigId(processResultBo.getConfigId());
+                    tempResult.setLogId(processResultBo.getLogId());
+                    tempResult.setResult(resultObject.toString());
                     processResultList.add(tempResult);
                 }
             }
             if (!processResultList.isEmpty()) {
                 processResultService.saveBatch(processResultList);
+                return processResultList.size();
             }
         }
-        return true;
-
-    }
-
-    @Deprecated
-    public boolean saveResult(String configId, ProcessResultBo processResultBo) {
-        List<ProcessResult> existResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(ProcessResult::getConfigId, configId));
-        Set<String> existResultContentSet = existResultList.stream()
-                .map(ProcessResult::getResult)
-                .collect(Collectors.toSet());
-        if (processResultBo.isSuccess()) {
-            List<ProcessResult> processResultList = new ArrayList<>();
-            Object processResult = processResultBo.getResult();
-            if (processResult instanceof Iterable) {
-                for (Object o : (Iterable<?>) processResult) {
-                    if (existResultContentSet.contains(o.toString())) {
-                        continue;
-                    }
-                    ProcessResult tempResult = new ProcessResult();
-                    tempResult.setConfigId(configId);
-                    tempResult.setResult(o.toString());
-                    processResultList.add(tempResult);
-                }
-            } else if (processResult != null && processResult.getClass().isArray()) {
-                int length = Array.getLength(processResult);
-                for (int i = 0; i < length; i++) {
-                    Object o = Array.get(processResult, i);
-                    if (!(o instanceof Serializable)) {
-                        if (existResultContentSet.contains(o.toString())) {
-                            continue;
-                        }
-                        ProcessResult tempResult = new ProcessResult();
-                        tempResult.setConfigId(configId);
-                        tempResult.setResult(o.toString());
-                        processResultList.add(tempResult);
-                    }
-                }
-            } else {
-                Object o = processResultBo.getResult();
-                if (!existResultContentSet.contains(o.toString())) {
-                    ProcessResult tempResult = new ProcessResult();
-                    tempResult.setConfigId(configId);
-                    tempResult.setResult(o.toString());
-                    processResultList.add(tempResult);
-                }
-            }
-            if (!processResultList.isEmpty()) {
-                processResultService.saveBatch(processResultList);
-            }
-        }
-        return true;
+        return null;
     }
 
 }

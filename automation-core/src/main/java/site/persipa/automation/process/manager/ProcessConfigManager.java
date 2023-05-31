@@ -9,12 +9,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import site.persipa.automation.enums.exception.ProcessExceptionEnum;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.mapstruct.process.MapProcessConfigMapper;
 import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
 import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.ProcessNode;
-import site.persipa.automation.pojo.process.bo.ProcessExecuteResultBo;
+import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigPageDto;
@@ -100,9 +101,12 @@ public class ProcessConfigManager {
     }
 
     public ProcessResultPreviewVo previewResult(String configId) {
-        ProcessExecuteResultBo processResultBo = processManager.execute(configId, ProcessTypeEnum.PREVIEW);
-        ProcessResultPreviewVo previewVo = mapProcessResultMapper.executeResultBoToPreviewVo(processResultBo);
-        if (processResultBo.isExecuteSuccess()) {
+        ProcessConfig processConfig = processConfigService.getById(configId);
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+
+        ProcessResultBo processResultBo = processManager.execute(processConfig, ProcessTypeEnum.PREVIEW);
+        ProcessResultPreviewVo previewVo = mapProcessResultMapper.resultBoToPreviewVo(processResultBo);
+        if (ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus())) {
             Object processResult = previewVo.getResult();
             boolean canSerialize = true;
             if (processResult instanceof Iterable) {
@@ -129,8 +133,15 @@ public class ProcessConfigManager {
     }
 
     public Boolean execute(String configId) {
-        ProcessExecuteResultBo executeResultBo = processManager.execute(configId, ProcessTypeEnum.MANUAL);
-        return executeResultBo.isExecuteCompleted() && executeResultBo.isExecuteSuccess();
+        ProcessConfig processConfig = processConfigService.getById(configId);
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+        ProcessResultBo processResultBo = processManager.execute(processConfig, ProcessTypeEnum.MANUAL);
+        boolean processSuccess = ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus());
+        if (processSuccess) {
+            processConfig.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
+            processConfigService.updateById(processConfig);
+        }
+        return processSuccess;
     }
 
     public Page<ProcessConfig> page(PageDto<ProcessConfigPageDto> pageDto) {

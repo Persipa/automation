@@ -10,3 +10,7 @@ spring:
         server-addr: 192.168.1.100:8848
         file-extension: yaml
         namespace: m6
+        shared-configs:
+          - group: COMMON_GROUP
+            data-id: dubbo.yaml
+            refresh: true

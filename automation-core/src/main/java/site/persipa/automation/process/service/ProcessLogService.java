@@ -1,6 +1,7 @@
 package site.persipa.automation.process.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.pojo.process.ProcessLog;
 
@@ -11,6 +12,6 @@ public interface ProcessLogService extends IService<ProcessLog> {
 
     String saveLog(String configId, ProcessTypeEnum processType);
 
-    boolean completeLog(String logId, boolean success);
+    void completeLog(String logId, ProcessStatusEnum processStatus);
 
 }

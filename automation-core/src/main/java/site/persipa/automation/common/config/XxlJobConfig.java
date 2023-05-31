@@ -20,12 +20,16 @@ public class XxlJobConfig {
     @Value("${xxl.job.accessToken}")
     private String accessToken;
 
+    @Value("${xxl.job.executor.logpath}")
+    private String logPath;
+
     @Bean
     public XxlJobSpringExecutor xxlJobExecutor() {
         XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
         xxlJobSpringExecutor.setAdminAddresses(adminAddress);
         xxlJobSpringExecutor.setAppname(appname);
         xxlJobSpringExecutor.setAccessToken(accessToken);
+        xxlJobSpringExecutor.setLogPath(logPath);
         return xxlJobSpringExecutor;
     }
 }

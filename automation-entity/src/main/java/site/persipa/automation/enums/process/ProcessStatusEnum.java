@@ -32,6 +32,16 @@ public enum ProcessStatusEnum {
      */
     FAIL(92, "fail"),
 
+    /**
+     * 跳过执行
+     */
+    SKIP(93, "skip"),
+
+    /**
+     * 拒绝执行
+     */
+    REFUSE(94, "refuse"),
+
     ;
 
     @EnumValue
