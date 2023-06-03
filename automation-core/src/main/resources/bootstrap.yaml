@@ -1,6 +1,6 @@
 spring:
   application:
-    name: Automation
+    name: automation
   cloud:
     nacos:
       discovery:
