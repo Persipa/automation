@@ -2,11 +2,13 @@ package site.persipa.automation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * @author persipa
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan("site.persipa.automation.common.properties")
 public class AutomationApplication {
 
     public static void main(String[] args) {

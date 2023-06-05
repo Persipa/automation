@@ -35,17 +35,15 @@ public class ProcessJob {
             return;
         }
         ProcessResultBo resultBo = processManager.execute(processConfig, ProcessTypeEnum.AUTO);
+        String notification = processManager.parseResultBo(resultBo);
 
-        String noticeContent;
         if (ProcessStatusEnum.SUCCESS.equals(resultBo.getProcessStatus())) {
-            noticeContent = StrFormatter.format("任务（id:{}）执行成功，结果数量:{}", configId, resultBo.getResultCount());
-            XxlJobHelper.log("任务（id：{}）执行成功，结果数量：{}", configId, resultBo.getResultCount());
+            XxlJobHelper.log(notification);
             XxlJobHelper.log("执行结果：{}", resultBo.getResult().toString());
         } else {
-            noticeContent = StrFormatter.format("任务（id:{}）执行失败，异常信息：{}", configId, resultBo.getMessage());
             XxlJobHelper.handleFail(resultBo.getMessage());
         }
 
-        barkClientManager.sendMessage(null, noticeContent);
+        barkClientManager.sendMessage(null, notification);
     }
 }

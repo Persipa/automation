@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import site.persipa.automation.common.properties.ProcessNotificationProperties;
 import site.persipa.automation.constant.RedisConstant;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
@@ -15,6 +16,7 @@ import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.process.service.ProcessConfigService;
 import site.persipa.automation.process.service.ProcessLogService;
 import site.persipa.automation.process.service.ProcessNodeService;
+import site.persipa.automation.process.util.TemplateUtil;
 import site.persipa.cloud.exception.PersipaCustomException;
 
 import java.lang.reflect.Array;
@@ -37,6 +39,8 @@ public class ProcessManager {
 
     private final ProcessResultManager processResultManager;
 
+    private final ProcessNotificationProperties processNotificationProperties;
+
     private final StringRedisTemplate redisTemplate;
 
     public ProcessResultBo execute(ProcessConfig processConfig, ProcessTypeEnum processType) {
@@ -47,6 +51,7 @@ public class ProcessManager {
             return result;
         }
         result.setConfigId(configId);
+        result.setConfigName(processConfig.getResourceName());
 
         // 存日志
         String logId = processLogService.saveLog(configId, processType);
@@ -121,6 +126,12 @@ public class ProcessManager {
         processLogService.completeLog(logId, result.getProcessStatus());
 
         return result;
+    }
+
+    public String parseResultBo(ProcessResultBo resultBo) {
+        String template = ProcessStatusEnum.SUCCESS.equals(resultBo.getProcessStatus()) ?
+                processNotificationProperties.getSuccess() : processNotificationProperties.getFail();
+        return TemplateUtil.fill(template, resultBo);
     }
 
 }

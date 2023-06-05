@@ -112,8 +112,8 @@ public class ProcessResultManager {
             }
             if (!processResultList.isEmpty()) {
                 processResultService.saveBatch(processResultList);
-                return processResultList.size();
             }
+            return processResultList.size();
         }
         return null;
     }

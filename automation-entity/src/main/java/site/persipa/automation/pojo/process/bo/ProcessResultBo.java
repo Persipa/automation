@@ -15,6 +15,8 @@ public class ProcessResultBo {
 
     private String configId;
 
+    private String configName;
+
     private ProcessStatusEnum processStatus;
 
     private String logId;
