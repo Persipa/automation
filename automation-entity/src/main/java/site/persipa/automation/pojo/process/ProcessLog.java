@@ -1,5 +1,6 @@
 package site.persipa.automation.pojo.process;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 @TableName("process_log")
 public class ProcessLog {
 
+    @TableId
     private String id;
 
     private String configId;

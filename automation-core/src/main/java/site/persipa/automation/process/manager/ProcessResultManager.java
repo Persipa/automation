@@ -1,6 +1,7 @@
 package site.persipa.automation.process.manager;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -33,7 +34,7 @@ public class ProcessResultManager {
 
     public List<ProcessResultVo> list(ProcessResultDto dto) {
         List<ProcessResult> resultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(ProcessResult::getConfigId, dto.getConfigId())
+                .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
                 .eq(dto.getUsed() != null, ProcessResult::getUsed, dto.getUsed()));
         return resultList.stream().map(mapProcessResultMapper::toVo)
                 .collect(Collectors.toList());
@@ -41,7 +42,7 @@ public class ProcessResultManager {
 
     public ProcessResultCombineVo listCombine(ProcessResultDto dto) {
         List<ProcessResult> processResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(ProcessResult::getConfigId, dto.getConfigId())
+                .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
                 .eq(dto.getUsed() != null, ProcessResult::getUsed, dto.getUsed()));
         List<String> resultList = processResultList.stream()
                 .map(ProcessResult::getResult)

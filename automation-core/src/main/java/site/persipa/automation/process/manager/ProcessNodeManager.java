@@ -64,7 +64,7 @@ public class ProcessNodeManager {
     private final MapProcessNodeEntityMapper mapProcessNodeEntityMapper;
 
     @Transactional(rollbackFor = Exception.class)
-    public String add(ProcessNodeDto processNodeDto) {
+    public String upsert(ProcessNodeDto processNodeDto) {
         // 校验配置存在
         String configId = processNodeDto.getConfigId();
         ProcessConfig processConfig = processConfigService.getById(configId);
@@ -123,13 +123,12 @@ public class ProcessNodeManager {
             processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
             processConfigService.updateById(processConfig);
         }
+        // 移除节点和节点参数
         List<ProcessNodeEntity> nodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
         if (!nodeEntityList.isEmpty()) {
             processNodeEntityService.removeBatchByIds(nodeEntityList);
         }
-        processNodeService.removeById(nodeId);
-
-        return true;
+        return processNodeService.removeById(nodeId);
     }
 
     private void verifyNodeEntity(ReflectMethod reflectMethod, List<ProcessNodeEntity> nodeEntityList) {

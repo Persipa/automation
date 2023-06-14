@@ -19,6 +19,7 @@ import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigPageDto;
+import site.persipa.automation.pojo.process.dto.ProcessConfigUpdateDto;
 import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.automation.process.service.ProcessConfigService;
 import site.persipa.automation.process.service.ProcessNodeEntityService;
@@ -52,7 +53,7 @@ public class ProcessConfigManager {
     private final MapProcessResultMapper mapProcessResultMapper;
 
     @Transactional(rollbackFor = Exception.class)
-    public String addConfig(ProcessConfigDto processConfigDto) {
+    public String add(ProcessConfigDto processConfigDto) {
         String resourceName = processConfigDto.getResourceName();
         long count = processConfigService.count(Wrappers.lambdaQuery(ProcessConfig.class)
                 .eq(ProcessConfig::getResourceName, resourceName));
@@ -62,6 +63,22 @@ public class ProcessConfigManager {
         spiderConfig.setProcessStatus(ProcessConfigStatusEnum.INIT);
         processConfigService.save(spiderConfig);
         return spiderConfig.getId();
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean update(ProcessConfigUpdateDto dto) {
+        ProcessConfig processConfig = processConfigService.getById(dto.getId());
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+
+        if (StrUtil.isNotBlank(dto.getResourceName())) {
+            long count = processConfigService.count(Wrappers.lambdaQuery(ProcessConfig.class)
+                    .eq(ProcessConfig::getResourceName, dto.getResourceName())
+                    .ne(ProcessConfig::getId, dto.getId()));
+            Assert.isTrue(count == 0, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NAME_DUPLICATE));
+            processConfig.setResourceName(dto.getResourceName());
+        }
+        processConfig.setResourcePostUri(dto.getResourcePostUri());
+        return processConfigService.updateById(processConfig);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -75,7 +92,7 @@ public class ProcessConfigManager {
 
         // 复制配置
         ProcessConfigDto configDto = mapProcessConfigMapper.cloneDto2Dto(cloneDto);
-        String configId = this.addConfig(configDto);
+        String configId = this.add(configDto);
 
         // 复制节点
         processNodeService.cloneNodeList(sourceConfigId, configId);

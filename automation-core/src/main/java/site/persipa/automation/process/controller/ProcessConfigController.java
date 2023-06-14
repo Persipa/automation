@@ -7,6 +7,7 @@ import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigPageDto;
+import site.persipa.automation.pojo.process.dto.ProcessConfigUpdateDto;
 import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.automation.process.manager.ProcessConfigManager;
 import site.persipa.cloud.pojo.page.dto.PageDto;
@@ -25,8 +26,13 @@ public class ProcessConfigController {
     private final ProcessConfigManager processConfigManager;
 
     @PostMapping("/add")
-    public Result<String> addConfig(@Valid @RequestBody ProcessConfigDto processConfigDto) {
-        return Result.success(processConfigManager.addConfig(processConfigDto));
+    public Result<String> add(@Valid @RequestBody ProcessConfigDto processConfigDto) {
+        return Result.success(processConfigManager.add(processConfigDto));
+    }
+
+    @PostMapping("/update")
+    public Result<Boolean> update(@Valid @RequestBody ProcessConfigUpdateDto dto) {
+        return Result.success(processConfigManager.update(dto));
     }
 
     @PostMapping("/clone")

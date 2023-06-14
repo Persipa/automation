@@ -20,11 +20,23 @@ public class ProcessNodeController {
     @Autowired
     private ProcessNodeManager processNodeManager;
 
-    @PostMapping("/add")
-    public Result<String> addNode(@RequestBody @Validated ProcessNodeDto nodeDto) {
-        return Result.success(processNodeManager.add(nodeDto));
+    /**
+     * 新增或修改节点
+     *
+     * @param nodeDto 节点配置
+     * @return 节点id
+     */
+    @PostMapping("/upsert")
+    public Result<String> upsert(@RequestBody @Validated ProcessNodeDto nodeDto) {
+        return Result.success(processNodeManager.upsert(nodeDto));
     }
 
+    /**
+     * 移除节点
+     *
+     * @param nodeId 节点id
+     * @return 是否成功
+     */
     @PostMapping("/remove/{nodeId}")
     public Result<Boolean> removeNode(@PathVariable("nodeId") String nodeId) {
         return Result.success(processNodeManager.remove(nodeId));
