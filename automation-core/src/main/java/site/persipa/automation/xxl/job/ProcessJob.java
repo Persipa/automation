@@ -5,7 +5,7 @@ import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import site.persipa.automation.dubbo.consumer.BarkClientManager;
+import site.persipa.automation.dubbo.consumer.BarkClientConsumer;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.pojo.process.ProcessConfig;
@@ -24,7 +24,7 @@ public class ProcessJob {
 
     private final ProcessConfigService processConfigService;
 
-    private final BarkClientManager barkClientManager;
+    private final BarkClientConsumer barkClientConsumer;
 
     @XxlJob("BtbttSpiderHandler")
     public void execute() {
@@ -37,13 +37,19 @@ public class ProcessJob {
         ProcessResultBo resultBo = processManager.execute(processConfig, ProcessTypeEnum.AUTO);
         String notification = processManager.parseResultBo(resultBo);
 
+        boolean notify = true;
         if (ProcessStatusEnum.SUCCESS.equals(resultBo.getProcessStatus())) {
             XxlJobHelper.log(notification);
             XxlJobHelper.log("执行结果：{}", resultBo.getResult().toString());
+            if (resultBo.getSaveCount() == 0) {
+                notify = false;
+            }
         } else {
             XxlJobHelper.handleFail(resultBo.getMessage());
         }
 
-        barkClientManager.sendMessage(null, notification);
+        if (notify) {
+            barkClientConsumer.sendMessage(null, notification);
+        }
     }
 }

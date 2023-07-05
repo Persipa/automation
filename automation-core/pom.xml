@@ -15,7 +15,7 @@
         <dependency>
             <groupId>site.persipa</groupId>
             <artifactId>bark-client-api</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.1</version>
             <scope>compile</scope>
         </dependency>
 

@@ -23,6 +23,9 @@ public class XxlJobConfig {
     @Value("${xxl.job.executor.logpath}")
     private String logPath;
 
+    @Value("${xxl.job.executor.ip}")
+    private String ip;
+
     @Bean
     public XxlJobSpringExecutor xxlJobExecutor() {
         XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
@@ -30,6 +33,7 @@ public class XxlJobConfig {
         xxlJobSpringExecutor.setAppname(appname);
         xxlJobSpringExecutor.setAccessToken(accessToken);
         xxlJobSpringExecutor.setLogPath(logPath);
+        xxlJobSpringExecutor.setIp(ip);
         return xxlJobSpringExecutor;
     }
 }
