@@ -8,6 +8,7 @@ import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigPageDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigUpdateDto;
+import site.persipa.automation.pojo.process.vo.ProcessConfigDetailVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.automation.process.manager.ProcessConfigManager;
 import site.persipa.cloud.pojo.page.dto.PageDto;
@@ -45,6 +46,11 @@ public class ProcessConfigController {
         return Result.success(processConfigManager.page(pageDto));
     }
 
+    @GetMapping("/detail/{configId}")
+    public Result<ProcessConfigDetailVo> detail(@PathVariable("configId") String configId){
+        return Result.success(processConfigManager.detail(configId));
+    }
+
     @PostMapping("/preview/{configId}")
     public Result<ProcessResultPreviewVo> preview(@PathVariable("configId")String configId) {
         return Result.success(processConfigManager.previewResult(configId));
@@ -53,6 +59,11 @@ public class ProcessConfigController {
     @PostMapping("/execute/{configId}")
     public Result<Boolean> execute(@PathVariable("configId") String configId) {
         return Result.success(processConfigManager.execute(configId));
+    }
+
+    @PostMapping("/remove/{configId}")
+    public Result<Boolean> remove(@PathVariable("configId") String configId) {
+        return Result.success(processConfigManager.remove(configId));
     }
 
 }

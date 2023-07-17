@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import site.persipa.automation.common.properties.ProcessNotificationProperties;
 import site.persipa.automation.constant.RedisConstant;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
@@ -43,6 +44,14 @@ public class ProcessManager {
 
     private final StringRedisTemplate redisTemplate;
 
+    /**
+     * 执行配置
+     *
+     * @param processConfig 需要执行的配置
+     * @param processType 执行的类型
+     * @return 执行结果
+     */
+    @Transactional(rollbackFor = Exception.class)
     public ProcessResultBo execute(ProcessConfig processConfig, ProcessTypeEnum processType) {
         ProcessResultBo result = new ProcessResultBo();
         String configId = processConfig.getId();
@@ -128,6 +137,12 @@ public class ProcessManager {
         return result;
     }
 
+    /**
+     * 将执行的结果转换为模板的描述结果
+     *
+     * @param resultBo 执行的结果
+     * @return 用于描述的结果
+     */
     public String parseResultBo(ProcessResultBo resultBo) {
         String template = ProcessStatusEnum.SUCCESS.equals(resultBo.getProcessStatus()) ?
                 processNotificationProperties.getSuccess() : processNotificationProperties.getFail();

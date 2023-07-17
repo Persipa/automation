@@ -3,11 +3,13 @@ package site.persipa.automation.reflect.service.impl;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.persipa.automation.pojo.reflect.ReflectEntity;
 import site.persipa.automation.reflect.mapper.ReflectEntityMapper;
 import site.persipa.automation.reflect.service.ReflectEntityService;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,5 +39,11 @@ public class ReflectEntityServiceImpl extends ServiceImpl<ReflectEntityMapper, R
         }
         result.addAll(tempEntityList);
         return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean removeBatchByEntityId(Collection<? extends String> entityIdSet) {
+        return this.removeBatchByIds(entityIdSet);
     }
 }

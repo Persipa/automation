@@ -41,7 +41,7 @@ public class ReflectClassServiceImpl extends ServiceImpl<ReflectClassMapper, Ref
         ReflectClass jsoupClass = this.getById(classId);
         String className = jsoupClass.getClassName();
         BasicDataTypeEnum result = BasicDataTypeEnum.parseByName(className);
-        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.RELECT_CLASS_TYPE_NOT_MATCH));
+        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.REFLECT_CLASS_TYPE_NOT_MATCH));
         return result;
     }
 
@@ -50,7 +50,7 @@ public class ReflectClassServiceImpl extends ServiceImpl<ReflectClassMapper, Ref
         ReflectClass jsoupClass = this.getById(classId);
         String classFullName = this.classFullName(jsoupClass);
         PackagingDataTypeEnum result = PackagingDataTypeEnum.parseByClassName(classFullName);
-        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.RELECT_CLASS_TYPE_NOT_MATCH));
+        Assert.notNull(result, () -> new PersipaCustomException(ReflectExceptionEnum.REFLECT_CLASS_TYPE_NOT_MATCH));
         return result;
     }
 

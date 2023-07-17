@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
 import site.persipa.automation.pojo.process.ProcessResult;
@@ -32,6 +33,12 @@ public class ProcessResultManager {
 
     private final MapProcessResultMapper mapProcessResultMapper;
 
+    /**
+     * 查询结果
+     *
+     * @param dto 查询参数
+     * @return 查询的结果数组
+     */
     public List<ProcessResultVo> list(ProcessResultDto dto) {
         List<ProcessResult> resultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
                 .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
@@ -40,6 +47,12 @@ public class ProcessResultManager {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 查询结果（并将结果合并为一个字段）
+     *
+     * @param dto 查询参数
+     * @return 查询结果
+     */
     public ProcessResultCombineVo listCombine(ProcessResultDto dto) {
         List<ProcessResult> processResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
                 .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
@@ -50,6 +63,13 @@ public class ProcessResultManager {
         return new ProcessResultCombineVo(dto.getConfigId(), resultList);
     }
 
+    /**
+     * 标记结果已被使用
+     *
+     * @param configId 执行的配置id
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
     public boolean read(String configId) {
         return processResultService.update(Wrappers.lambdaUpdate(ProcessResult.class)
                 .set(ProcessResult::getUsed, true)
@@ -57,6 +77,13 @@ public class ProcessResultManager {
                 .eq(ProcessResult::getUsed, false));
     }
 
+    /**
+     * 标记结果已被使用
+     *
+     * @param resultIdList 结果id 数组
+     * @return 是否成功
+     */
+    @Transactional(rollbackFor = Exception.class)
     public boolean read(List<String> resultIdList) {
         if (CollUtil.isEmpty(resultIdList)) {
             return false;
@@ -67,6 +94,13 @@ public class ProcessResultManager {
                 .eq(ProcessResult::getUsed, false));
     }
 
+    /**
+     * 保存执行的结果
+     *
+     * @param processResultBo 执行的结果
+     * @return 保存结果的的数量
+     */
+    @Transactional(rollbackFor = Exception.class)
     public Integer saveResult(ProcessResultBo processResultBo) {
         List<ProcessResult> existResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
                 .eq(ProcessResult::getConfigId, processResultBo.getConfigId()));

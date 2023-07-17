@@ -87,21 +87,21 @@ public class ProcessNodeManager {
         processNodeService.saveOrUpdate(processNode);
         String nodeId = processNode.getId();
 
-        // 执行方法的参数
-        List<ProcessNodeEntity> existNodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
-        Map<Integer, String> argOrderIdMap;
-        if (!existNodeEntityList.isEmpty()) {
-            argOrderIdMap = existNodeEntityList.stream()
-                    .collect(Collectors.toMap(ProcessNodeEntity::getArgOrder, ProcessNodeEntity::getId, (k1, k2) -> k1));
-        } else {
-            argOrderIdMap = Collections.emptyMap();
-        }
-        List<ProcessNodeEntity> nodeEntityList = processNodeDto.getNodeEntities().stream()
-                .map(entity -> mapProcessNodeEntityMapper.fromDto(entity, nodeId))
-                .collect(Collectors.toList());
-        nodeEntityList.forEach(entity -> entity.setId(argOrderIdMap.get(entity.getArgOrder())));
-        // 保存
-        processNodeEntityService.saveOrUpdateBatch(nodeEntityList);
+            // 执行方法的参数
+            List<ProcessNodeEntity> existNodeEntityList = processNodeEntityService.listByNodeId(nodeId, null);
+            Map<Integer, String> argOrderIdMap;
+            if (!existNodeEntityList.isEmpty()) {
+                argOrderIdMap = existNodeEntityList.stream()
+                        .collect(Collectors.toMap(ProcessNodeEntity::getArgOrder, ProcessNodeEntity::getId, (k1, k2) -> k1));
+            } else {
+                argOrderIdMap = Collections.emptyMap();
+            }
+            List<ProcessNodeEntity> nodeEntityList = processNodeDto.getNodeEntities().stream()
+                    .map(entity -> mapProcessNodeEntityMapper.fromDto(entity, nodeId))
+                    .collect(Collectors.toList());
+            nodeEntityList.forEach(entity -> entity.setId(argOrderIdMap.get(entity.getArgOrder())));
+            // 保存
+            processNodeEntityService.saveOrUpdateBatch(nodeEntityList);
 
         // 更改配置状态为：编辑中
         processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
@@ -151,9 +151,11 @@ public class ProcessNodeManager {
                 .filter(entity -> !NodeEntityGainTypeEnum.INPUT.equals(entity.getGainType()))
                 .map(ProcessNodeEntity::getEntityId)
                 .collect(Collectors.toList());
-        List<ReflectEntity> reflectEntityList = reflectEntityService.listByIds(entityIdList);
-        Assert.equals(entityIdList.size(), reflectEntityList.size(),
-                () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
+        if (!entityIdList.isEmpty()) {
+            List<ReflectEntity> reflectEntityList = reflectEntityService.listByIds(entityIdList);
+            Assert.equals(entityIdList.size(), reflectEntityList.size(),
+                    () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
+        }
     }
 
     public List<ProcessNodeVo> listByConfigId(String configId) {

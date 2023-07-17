@@ -2,7 +2,7 @@
 .idea/
 **/bootstrap-local.yaml
 **/target/
-**/*.log
+**/log/
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

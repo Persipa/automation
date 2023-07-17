@@ -11,14 +11,16 @@ import site.persipa.cloud.enums.PersipaExceptionDef;
 @Getter
 @AllArgsConstructor
 public enum ProcessExceptionEnum implements PersipaExceptionDef {
+    // 214        748      364        7
+    // 系统代码   模块代码   错误代码   错误级别
+    // 001-200  000-999  0000-999   3|6|9
+    CONFIG_NOT_EXIST(10200019, "配置不存在", ExceptionLevelEnum.ERROR),
 
-    CONFIG_NOT_EXIST(770050101, "配置不存在", ExceptionLevelEnum.ERROR),
+    CONFIG_NON_EXECUTABLE(10200026, "配置不可执行", ExceptionLevelEnum.EXCEPTION),
 
-    CONFIG_NON_EXECUTABLE(770050102, "配置不可执行", ExceptionLevelEnum.EXCEPTION),
+    CONFIG_NAME_DUPLICATE(10200036, "配置名称重复", ExceptionLevelEnum.EXCEPTION),
 
-    CONFIG_NAME_DUPLICATE(770050103, "配置名称重复", ExceptionLevelEnum.EXCEPTION),
-
-    CONFIG_CLONE_FAILED(770050104, "配置复制失败", ExceptionLevelEnum.EXCEPTION),
+    CONFIG_CLONE_FAILED(10200046, "配置复制失败", ExceptionLevelEnum.EXCEPTION),
 
     ;
 

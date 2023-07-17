@@ -19,7 +19,7 @@ public class ProcessNodeDto {
     private String configId;
 
     @NotNull
-    private ProcessNodeTypeEnum processingType;
+    private ProcessNodeTypeEnum nodeType;
 
     private Long sort;
 

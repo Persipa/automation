@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
 import site.persipa.automation.enums.process.ProcessNodeStatusEnum;
 import site.persipa.automation.pojo.process.ProcessConfig;
@@ -23,6 +24,7 @@ public class ProcessConfigServiceImpl extends ServiceImpl<ProcessConfigMapper, P
     private final ProcessNodeService processNodeService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void flushStatus(String configId) {
         long unsavedNodeCount = processNodeService.count(Wrappers.lambdaQuery(ProcessNode.class)
                 .eq(ProcessNode::getConfigId, configId)

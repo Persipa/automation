@@ -52,6 +52,13 @@ public class ReflectEntityManager {
 
     private final MapReflectEntityMapper mapReflectEntityMapper;
 
+    /**
+     * 添加一个实例
+     *
+     * @param entityDto 实例信息
+     * @param force 若强制添加则不会尝试构造
+     * @return 新实例的id
+     */
     @Transactional(rollbackFor = Exception.class)
     public String addEntity(ReflectEntityDto entityDto, boolean force) {
         // 树转数组
@@ -94,6 +101,12 @@ public class ReflectEntityManager {
         return entityId;
     }
 
+    /**
+     * 移除实例
+     *
+     * @param entityId 实例id
+     * @return 是否成功
+     */
     public boolean remove(String entityId) {
         ReflectEntity reflectEntity = reflectEntityService.getById(entityId);
         Assert.notNull(reflectEntity, () -> new PersipaRuntimeException(ReflectExceptionEnum.REFLECT_ENTITY_NOT_FOUND));
@@ -109,6 +122,12 @@ public class ReflectEntityManager {
         return reflectEntityService.removeBatchByIds(deleteEntityList);
     }
 
+    /**
+     * 预览实例值
+     *
+     * @param entityId 实例if
+     * @return 预览的值
+     */
     public ReflectEntityPreviewVo preview(String entityId) {
         // 实例信息
         ReflectEntity reflectEntity = reflectEntityService.getById(entityId);
@@ -135,6 +154,14 @@ public class ReflectEntityManager {
         return previewVo;
     }
 
+    /**
+     * 将树形的{@link ReflectEntityDto} 转为{@link ReflectEntity} 数组
+     *
+     * @param dto 树形实例
+     * @param parentId 父实例id
+     * @param sort 子实例的排序
+     * @return 实例数组
+     */
     public List<ReflectEntity> parseEntityDto(ReflectEntityDto dto, String parentId, Integer sort) {
         if (dto == null) return null;
 
@@ -161,11 +188,26 @@ public class ReflectEntityManager {
         return entityList;
     }
 
+    /**
+     * 构造类实例
+     *
+     * @see #construct(ReflectEntity)
+     * @param entityId 反射实例id
+     * @return 类实例
+     * @throws PersipaCustomException 构造过程可能抛出异常
+     */
     public Object construct(String entityId) throws PersipaCustomException {
         ReflectEntity reflectEntity = reflectEntityService.getById(entityId);
         return this.construct(reflectEntity);
     }
 
+    /**
+     * 构造类实例
+     *
+     * @param reflectEntity 实例信息
+     * @return 类实例
+     * @throws PersipaCustomException 构造方法不存在，构造过程可能抛出异常
+     */
     private Object construct(ReflectEntity reflectEntity) throws PersipaCustomException {
         Object result = null;
         ReflectEntityConstructor entityConstructor = reflectEntityConstructorService.getById(reflectEntity.getConstructorId());
@@ -187,6 +229,13 @@ public class ReflectEntityManager {
         return result;
     }
 
+    /**
+     * 通过包装类的valueOf 方法构造基础类型的包装类实例
+     *
+     * @param reflectEntity 实例信息
+     * @return 包装类实例
+     * @throws PersipaCustomException 非基础数据类型、valueOf方法找不到可能抛出异常
+     */
     private Object constructBasicData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String classId = reflectEntity.getClassId();
         BasicDataTypeEnum dataType = reflectClassService.basicDataType(classId);
@@ -199,6 +248,13 @@ public class ReflectEntityManager {
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
+    /**
+     * 通过包装类的valueOf 方法构造包装类实例
+     *
+     * @param reflectEntity 实例信息
+     * @return 包装类的实例
+     * @throws PersipaCustomException 非包装类、valueOf方法找不到可能抛出异常
+     */
     private Object constructPackagingData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String classId = reflectEntity.getClassId();
         PackagingDataTypeEnum dataType = reflectClassService.packagingDataType(classId);
@@ -214,6 +270,13 @@ public class ReflectEntityManager {
         return ReflectUtil.invokeStatic(method, reflectEntity.getEntityValue());
     }
 
+    /**
+     * 构造普通的类实例
+     *
+     * @param reflectEntity 类信息
+     * @return 类的实例
+     * @throws PersipaCustomException 反射操作出现异常、构造失败、参数数量不正确可能会抛出异常
+     */
     private Object constructNormalData(ReflectEntity reflectEntity) throws PersipaCustomException {
         String constructorId = reflectEntity.getConstructorId();
         Class<?> entityClass = reflectClassService.getClazz(reflectEntity.getClassId());
