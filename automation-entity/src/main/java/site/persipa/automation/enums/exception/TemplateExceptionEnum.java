@@ -20,6 +20,7 @@ public enum TemplateExceptionEnum implements PersipaExceptionDef {
 
     TEMPLATE_ENTITY_NOT_EXIST(10300046, "模板实例不存在", ExceptionLevelEnum.EXCEPTION),
 
+    TEMPLATE_ENTITY_LABEL_DUPLICATE(10300056, "反射实例模版标签重复", ExceptionLevelEnum.EXCEPTION),
 
     ;
 

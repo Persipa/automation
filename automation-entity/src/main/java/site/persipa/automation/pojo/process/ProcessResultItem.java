@@ -2,6 +2,7 @@ package site.persipa.automation.pojo.process;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -11,35 +12,25 @@ import java.time.LocalDateTime;
  * @author persipa
  */
 @Data
-@TableName("process_log")
-public class ProcessLog {
+@TableName("process_result_item")
+public class ProcessResultItem {
 
+    @TableId
     private String id;
 
-    /**
-     * 配置文件名
-     */
-    private String configName;
+    private String configId;
 
-    /**
-     * 配置文件备注
-     */
-    private String configRemark;
+    private String processId;
 
-    /**
-     * 操作类型
-     */
-    private String operationType;
+    private String result;
 
-    /**
-     * 参数
-     */
-    private String params;
+    private Boolean used;
 
-    /**
-     * 创建日期
-     */
+    private Boolean isNew;
+
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updateTime;
 }

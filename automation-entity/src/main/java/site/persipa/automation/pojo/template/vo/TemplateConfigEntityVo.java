@@ -2,6 +2,7 @@ package site.persipa.automation.pojo.template.vo;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -10,8 +11,9 @@ import java.util.List;
  * @author persipa
  */
 @Data
-public class TemplateConfigEntityVo {
+public class TemplateConfigEntityVo implements Serializable {
 
+    private static final long serialVersionUID = 3776961568495064741L;
     /**
      * 模板id
      */

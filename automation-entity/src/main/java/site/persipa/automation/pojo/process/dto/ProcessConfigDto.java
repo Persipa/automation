@@ -13,8 +13,8 @@ public class ProcessConfigDto {
     private String id;
 
     @NotBlank(message = "配置名称不可为空")
-    private String resourceName;
+    private String configName;
 
-    private String resourcePostUri;
+    private String remark;
 
 }

@@ -195,8 +195,8 @@ public class TemplateConfigManager {
 
         // 生成流程
         ProcessConfigDto processConfigDto = new ProcessConfigDto();
-        processConfigDto.setResourceName(configGenDto.getProcessConfigName());
-        processConfigDto.setResourcePostUri(templateConfig.getTemplateCode());
+        processConfigDto.setConfigName(configGenDto.getProcessConfigName());
+        processConfigDto.setRemark(templateConfig.getTemplateCode());
         String processConfigId = processConfigManager.add(processConfigDto);
 
         // 生成节点并绑定节点参数

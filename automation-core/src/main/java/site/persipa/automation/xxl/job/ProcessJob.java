@@ -26,6 +26,10 @@ public class ProcessJob {
 
     private final BarkClientConsumer barkClientConsumer;
 
+    /**
+     * @deprecated 计划不再使用定时任务直接执行配置，使用定时任务操作业务系统，间接执行配置
+     */
+    @Deprecated
     @XxlJob("BtbttSpiderHandler")
     public void execute() {
         String configId = XxlJobHelper.getJobParam();

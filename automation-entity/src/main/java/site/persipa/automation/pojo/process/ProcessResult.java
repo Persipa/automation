@@ -1,10 +1,9 @@
 package site.persipa.automation.pojo.process;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+import site.persipa.automation.enums.process.ProcessStatusEnum;
+import site.persipa.automation.enums.process.ProcessTypeEnum;
 
 import java.time.LocalDateTime;
 
@@ -18,17 +17,46 @@ public class ProcessResult {
     @TableId
     private String id;
 
+    /**
+     * 配置id
+     */
     private String configId;
 
-    private String result;
+    /**
+     * 执行id
+     */
+    private String processId;
 
-    private String logId;
+    /**
+     * 执行类型
+     */
+    private ProcessTypeEnum processType;
 
-    private Boolean used;
+    /**
+     * 执行结果
+     */
+    private ProcessStatusEnum processStatus;
 
+    /**
+     * 完成时间
+     */
+    private LocalDateTime completeTime;
+
+    /**
+     * 创建时间
+     */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    /**
+     * 更新时间
+     */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
+
+    /**
+     * 是否删除
+     */
+    @TableLogic(value = "0")
+    private Boolean deleted;
 }

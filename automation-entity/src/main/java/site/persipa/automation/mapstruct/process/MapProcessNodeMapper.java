@@ -27,7 +27,7 @@ public interface MapProcessNodeMapper {
     @Mappings({
             @Mapping(target = "id", source = "processNode.id"),
             @Mapping(target = "configId", source = "processNode.configId"),
-            @Mapping(target = "configName", source = "processConfig.resourceName"),
+            @Mapping(target = "configName", source = "processConfig.configName"),
             @Mapping(target = "methodClassName", source = "reflectMethod.className")
     })
     ProcessNodeVo toVo(ProcessConfig processConfig, ProcessNode processNode,

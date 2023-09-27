@@ -27,6 +27,11 @@ public class TemplateEntity {
     private String constructorId;
 
     /**
+     * 标识符
+     */
+    private String label;
+
+    /**
      * 实例的值
      */
     private String defaultValue;

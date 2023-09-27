@@ -22,6 +22,7 @@ public enum ProcessTypeEnum {
      */
     MANUAL(2, "manual", true),
 
+
     /**
      * 预览
      */
@@ -32,6 +33,10 @@ public enum ProcessTypeEnum {
      */
     TEST(22, "test", false),
 
+    /**
+     * 远程调用
+     */
+    REMOTE_CALL(3, "remoteCall", true),
     ;
 
     @EnumValue

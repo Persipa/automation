@@ -16,6 +16,8 @@ public class TemplateEntityDto {
 
     private String constructorId;
 
+    private String label;
+
     private Integer sort;
 
     private String defaultValue;

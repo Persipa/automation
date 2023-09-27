@@ -7,6 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import site.persipa.automation.enums.exception.ReflectExceptionEnum;
 import site.persipa.automation.enums.exception.TemplateExceptionEnum;
 import site.persipa.automation.mapstruct.template.MapTemplateEntityMapper;
@@ -21,7 +22,9 @@ import site.persipa.cloud.exception.PersipaRuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +55,14 @@ public class TemplateEntityManager {
                 .map(TemplateEntity::getId)
                 .findFirst()
                 .orElseThrow(() -> new PersipaRuntimeException(TemplateExceptionEnum.TEMPLATE_ENTITY_NOT_INDEPENDENT));
+        Map.Entry<String, Integer> duplicateLabel = entityList.stream()
+                .map(TemplateEntity::getLabel)
+                .filter(StringUtils::hasLength)
+                .collect(Collectors.toMap(Function.identity(), e -> 0, (k1, k2) -> 1))
+                .entrySet().stream()
+                .filter(entry -> entry.getValue().equals(1))
+                .findAny().orElse(null);
+        Assert.isNull(duplicateLabel, () -> new PersipaRuntimeException(TemplateExceptionEnum.TEMPLATE_ENTITY_NOT_EXIST));
 
         // 确定类存在
         Set<String> classIdSet = entityList.stream()

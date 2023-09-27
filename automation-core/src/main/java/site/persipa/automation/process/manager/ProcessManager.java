@@ -1,13 +1,16 @@
 package site.persipa.automation.process.manager;
 
 import cn.hutool.core.collection.IterUtil;
-import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import site.persipa.automation.common.properties.ProcessNotificationProperties;
 import site.persipa.automation.constant.RedisConstant;
+import site.persipa.automation.enums.exception.ProcessExceptionEnum;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.enums.process.ProcessTypeEnum;
@@ -15,12 +18,13 @@ import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.ProcessNode;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.process.service.ProcessConfigService;
-import site.persipa.automation.process.service.ProcessLogService;
 import site.persipa.automation.process.service.ProcessNodeService;
 import site.persipa.automation.process.util.TemplateUtil;
 import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.cloud.exception.PersipaRuntimeException;
 
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,8 +40,6 @@ public class ProcessManager {
 
     private final ProcessNodeManager processNodeManager;
 
-    private final ProcessLogService processLogService;
-
     private final ProcessResultManager processResultManager;
 
     private final ProcessNotificationProperties processNotificationProperties;
@@ -45,47 +47,74 @@ public class ProcessManager {
     private final StringRedisTemplate redisTemplate;
 
     /**
+     * 准备执行配置
+     *
+     * @param configId    准备执行配置的id
+     * @param processType 执行的类型
+     * @return 用户获取结果的id
+     */
+    public String prepareExecute(String configId, ProcessTypeEnum processType) {
+        ProcessConfig processConfig = processConfigService.getById(configId);
+        Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
+        if (processConfig.getProcessStatus() == null || !processConfig.getProcessStatus().isExecutable()) {
+            throw new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NON_EXECUTABLE);
+        }
+
+        // 抢占
+        String processIdKey = RedisConstant.PROCESS_EXECUTE_PROCESS_ID_KEY_PREFIX + configId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(processIdKey))) {
+            return redisTemplate.opsForValue().get(processIdKey);
+        }
+        String processId = IdUtil.fastSimpleUUID();
+        Boolean holdSuccess = redisTemplate.opsForValue().setIfAbsent(RedisConstant.PROCESS_EXECUTE_PROCESS_ID_KEY_PREFIX + configId, processId);
+        if (Boolean.FALSE.equals(holdSuccess)) {
+            return redisTemplate.opsForValue().get(processIdKey);
+        } else {
+            // todo 将待执行待配置 添加到执行队列中
+
+        }
+
+        return processId;
+    }
+
+    /**
      * 执行配置
      *
      * @param processConfig 需要执行的配置
-     * @param processType 执行的类型
+     * @param processType   执行的类型
      * @return 执行结果
      */
     @Transactional(rollbackFor = Exception.class)
     public ProcessResultBo execute(ProcessConfig processConfig, ProcessTypeEnum processType) {
         ProcessResultBo result = new ProcessResultBo();
-        String configId = processConfig.getId();
-        if (configId == null) {
-            result.setProcessStatus(ProcessStatusEnum.REFUSE);
-            return result;
-        }
-        result.setConfigId(configId);
-        result.setConfigName(processConfig.getResourceName());
 
-        // 存日志
-        String logId = processLogService.saveLog(configId, processType);
-        result.setLogId(logId);
+        String configId = processConfig.getId();
+        result.setConfigId(configId);
+        result.setConfigName(processConfig.getConfigName());
+        result.setProcessType(processType);
 
         // 验证是否可以执行
         ProcessConfigStatusEnum configStatus = processConfig.getProcessStatus();
         if (configStatus == null || !configStatus.isExecutable()) {
-            processLogService.completeLog(logId, ProcessStatusEnum.REFUSE);
             result.setProcessStatus(ProcessStatusEnum.REFUSE);
             return result;
         }
+
+        // 抢占
+        Boolean holdSuccess = redisTemplate.opsForValue().setIfAbsent(RedisConstant.KEY_PREFIX + configId, processType.getValue());
+        if (Boolean.FALSE.equals(holdSuccess)) {
+            result.setProcessStatus(ProcessStatusEnum.SKIP);
+            return result;
+        }
+
+        result.setExecuteTime(LocalDateTime.now());
 
         // 获取所有节点
         List<ProcessNode> nodeList = processNodeService.listByConfigId(configId, true);
         Object o = null;
 
-        // 抢占
-        Boolean holdSuccess = redisTemplate.opsForValue().setIfAbsent(RedisConstant.KEY_PREFIX + configId, processType.getValue());
-        if (Boolean.FALSE.equals(holdSuccess)) {
-            processLogService.completeLog(logId, ProcessStatusEnum.SKIP);
-            result.setProcessStatus(ProcessStatusEnum.SKIP);
-            return result;
-        }
         // 正式执行
+        result.setProcessId(IdUtil.fastSimpleUUID());
         for (ProcessNode processNode : nodeList) {
             try {
                 o = processNodeManager.execute(processNode, o);
@@ -93,13 +122,12 @@ public class ProcessManager {
                 processConfig.setProcessStatus(ProcessConfigStatusEnum.PROCESSING_ERROR);
                 processConfigService.updateById(processConfig);
                 String msg = e.getMsg();
-                msg = StrUtil.isEmpty(e.getDescription()) ? msg : msg + e.getDescription();
+                msg = !StringUtils.hasLength(e.getDescription()) ? msg : msg + e.getDescription();
 
                 result.setProcessStatus(ProcessStatusEnum.FAIL);
                 result.setMessage(msg);
                 break;
             } catch (Exception e) {
-                e.printStackTrace();
                 result.setProcessStatus(ProcessStatusEnum.FAIL);
                 result.setMessage(e.getMessage());
                 break;
@@ -107,6 +135,7 @@ public class ProcessManager {
         }
         result.setProcessStatus(ProcessStatusEnum.SUCCESS);
         result.setResult(o);
+        result.setCompleteTime(LocalDateTime.now());
         // 计算结果数量
         if (o != null) {
             int resultCount;
@@ -119,6 +148,7 @@ public class ProcessManager {
             }
             result.setResultCount(resultCount);
         }
+
         // 解锁
         String value = redisTemplate.opsForValue().get(RedisConstant.KEY_PREFIX + configId);
         if (processType.getValue().equals(value)) {
@@ -126,13 +156,7 @@ public class ProcessManager {
         }
 
         // 保存结果
-        if (processType.isSaveResult()) {
-            Integer saveCount = processResultManager.saveResult(result);
-            result.setSaveCount(saveCount);
-        }
-
-        // 记录日志
-        processLogService.completeLog(logId, result.getProcessStatus());
+        processResultManager.saveResult(result);
 
         return result;
     }

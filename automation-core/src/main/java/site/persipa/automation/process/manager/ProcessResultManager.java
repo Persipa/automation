@@ -1,22 +1,26 @@
 package site.persipa.automation.process.manager;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
+import site.persipa.automation.mapstruct.process.MapProcessResultItemMapper;
 import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
 import site.persipa.automation.pojo.process.ProcessResult;
+import site.persipa.automation.pojo.process.ProcessResultItem;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessResultDto;
 import site.persipa.automation.pojo.process.vo.ProcessResultCombineVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultVo;
+import site.persipa.automation.process.service.ProcessResultItemService;
 import site.persipa.automation.process.service.ProcessResultService;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +35,11 @@ public class ProcessResultManager {
 
     private final ProcessResultService processResultService;
 
+    private final ProcessResultItemService processResultItemService;
+
     private final MapProcessResultMapper mapProcessResultMapper;
+
+    private final MapProcessResultItemMapper mapProcessResultItemMapper;
 
     /**
      * 查询结果
@@ -40,10 +48,12 @@ public class ProcessResultManager {
      * @return 查询的结果数组
      */
     public List<ProcessResultVo> list(ProcessResultDto dto) {
-        List<ProcessResult> resultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
-                .eq(dto.getUsed() != null, ProcessResult::getUsed, dto.getUsed()));
-        return resultList.stream().map(mapProcessResultMapper::toVo)
+        List<ProcessResultItem> resultList = processResultItemService.list(Wrappers.lambdaQuery(ProcessResultItem.class)
+                .eq(StringUtils.hasLength(dto.getConfigId()), ProcessResultItem::getConfigId, dto.getConfigId())
+                .eq(StringUtils.hasLength(dto.getProcessId()), ProcessResultItem::getProcessId, dto.getProcessId())
+                .eq(dto.getIsNew() != null, ProcessResultItem::getIsNew, dto.getIsNew())
+                .eq(dto.getUsed() != null, ProcessResultItem::getUsed, dto.getUsed()));
+        return resultList.stream().map(mapProcessResultItemMapper::toVo)
                 .collect(Collectors.toList());
     }
 
@@ -54,11 +64,11 @@ public class ProcessResultManager {
      * @return 查询结果
      */
     public ProcessResultCombineVo listCombine(ProcessResultDto dto) {
-        List<ProcessResult> processResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(StrUtil.isNotEmpty(dto.getConfigId()), ProcessResult::getConfigId, dto.getConfigId())
-                .eq(dto.getUsed() != null, ProcessResult::getUsed, dto.getUsed()));
-        List<String> resultList = processResultList.stream()
-                .map(ProcessResult::getResult)
+        List<ProcessResultItem> processResultItemList = processResultItemService.list(Wrappers.lambdaQuery(ProcessResultItem.class)
+                .eq(StringUtils.hasLength(dto.getConfigId()), ProcessResultItem::getConfigId, dto.getConfigId())
+                .eq(dto.getUsed() != null, ProcessResultItem::getUsed, dto.getUsed()));
+        List<String> resultList = processResultItemList.stream()
+                .map(ProcessResultItem::getResult)
                 .collect(Collectors.toList());
         return new ProcessResultCombineVo(dto.getConfigId(), resultList);
     }
@@ -71,10 +81,11 @@ public class ProcessResultManager {
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean read(String configId) {
-        return processResultService.update(Wrappers.lambdaUpdate(ProcessResult.class)
-                .set(ProcessResult::getUsed, true)
-                .eq(ProcessResult::getConfigId, configId)
-                .eq(ProcessResult::getUsed, false));
+        return processResultItemService.update(Wrappers.lambdaUpdate(ProcessResultItem.class)
+                .set(ProcessResultItem::getUsed, true)
+                .set(ProcessResultItem::getUpdateTime, LocalDateTime.now())
+                .eq(ProcessResultItem::getConfigId, configId)
+                .eq(ProcessResultItem::getUsed, false));
     }
 
     /**
@@ -85,72 +96,77 @@ public class ProcessResultManager {
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean read(List<String> resultIdList) {
-        if (CollUtil.isEmpty(resultIdList)) {
+        if (CollectionUtils.isEmpty(resultIdList)) {
             return false;
         }
-        return processResultService.update(Wrappers.lambdaUpdate(ProcessResult.class)
-                .set(ProcessResult::getUsed, true)
-                .in(ProcessResult::getId, resultIdList)
-                .eq(ProcessResult::getUsed, false));
+        return processResultItemService.update(Wrappers.lambdaUpdate(ProcessResultItem.class)
+                .set(ProcessResultItem::getUsed, true)
+                .set(ProcessResultItem::getUpdateTime, LocalDateTime.now())
+                .in(ProcessResultItem::getId, resultIdList)
+                .eq(ProcessResultItem::getUsed, false));
     }
 
     /**
      * 保存执行的结果
      *
      * @param processResultBo 执行的结果
-     * @return 保存结果的的数量
      */
     @Transactional(rollbackFor = Exception.class)
-    public Integer saveResult(ProcessResultBo processResultBo) {
-        List<ProcessResult> existResultList = processResultService.list(Wrappers.lambdaQuery(ProcessResult.class)
-                .eq(ProcessResult::getConfigId, processResultBo.getConfigId()));
+    public void saveResult(ProcessResultBo processResultBo) {
+        ProcessResult processResult = mapProcessResultMapper.fromResultBo(processResultBo);
+        processResultService.save(processResult);
+
+        List<ProcessResultItem> existResultList = processResultItemService.list(Wrappers.lambdaQuery(ProcessResultItem.class)
+                .eq(ProcessResultItem::getConfigId, processResultBo.getConfigId())
+                .eq(ProcessResultItem::getIsNew, true));
         Set<String> existResultContentSet = existResultList.stream()
-                .map(ProcessResult::getResult)
+                .map(ProcessResultItem::getResult)
                 .collect(Collectors.toSet());
+
         Object resultObject = processResultBo.getResult();
         if (ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus()) && resultObject != null) {
-            List<ProcessResult> processResultList = new ArrayList<>();
+            List<ProcessResultItem> processResultItemList = new ArrayList<>();
             if (resultObject instanceof Iterable) {
                 for (Object o : (Iterable<?>) resultObject) {
-                    if (existResultContentSet.contains(o.toString())) {
-                        continue;
-                    }
-                    ProcessResult tempResult = new ProcessResult();
+                    ProcessResultItem tempResult = new ProcessResultItem();
                     tempResult.setConfigId(processResultBo.getConfigId());
-                    tempResult.setLogId(processResultBo.getLogId());
+                    tempResult.setProcessId(processResultBo.getProcessId());
                     tempResult.setResult(o.toString());
-                    processResultList.add(tempResult);
+                    tempResult.setIsNew(existResultContentSet.contains(o.toString()));
+                    processResultItemList.add(tempResult);
                 }
             } else if (resultObject.getClass().isArray()) {
                 int length = Array.getLength(resultObject);
                 for (int i = 0; i < length; i++) {
                     Object o = Array.get(resultObject, i);
                     if (!(o instanceof Serializable)) {
-                        if (existResultContentSet.contains(o.toString())) {
-                            continue;
-                        }
-                        ProcessResult tempResult = new ProcessResult();
+                        ProcessResultItem tempResult = new ProcessResultItem();
                         tempResult.setConfigId(processResultBo.getConfigId());
-                        tempResult.setLogId(processResultBo.getLogId());
+                        tempResult.setProcessId(processResultBo.getProcessId());
                         tempResult.setResult(o.toString());
-                        processResultList.add(tempResult);
+                        tempResult.setIsNew(existResultContentSet.contains(o.toString()));
+                        processResultItemList.add(tempResult);
                     }
                 }
             } else {
-                if (!existResultContentSet.contains(resultObject.toString())) {
-                    ProcessResult tempResult = new ProcessResult();
-                    tempResult.setConfigId(processResultBo.getConfigId());
-                    tempResult.setLogId(processResultBo.getLogId());
-                    tempResult.setResult(resultObject.toString());
-                    processResultList.add(tempResult);
-                }
+                ProcessResultItem tempResult = new ProcessResultItem();
+                tempResult.setConfigId(processResultBo.getConfigId());
+                tempResult.setProcessId(processResultBo.getProcessId());
+                tempResult.setResult(resultObject.toString());
+                tempResult.setIsNew(existResultContentSet.contains(resultObject.toString()));
+                processResultItemList.add(tempResult);
             }
-            if (!processResultList.isEmpty()) {
-                processResultService.saveBatch(processResultList);
+            if (!processResultItemList.isEmpty()) {
+                processResultItemService.saveBatch(processResultItemList);
             }
-            return processResultList.size();
         }
-        return null;
     }
 
+    public List<ProcessResultVo> listByProcessId(String processId) {
+        List<ProcessResultItem> resultItemList = processResultItemService.list(Wrappers.lambdaQuery(ProcessResultItem.class)
+                .eq(ProcessResultItem::getProcessId, processId));
+        return resultItemList.stream()
+                .map(mapProcessResultItemMapper::toVo)
+                .collect(Collectors.toList());
+    }
 }

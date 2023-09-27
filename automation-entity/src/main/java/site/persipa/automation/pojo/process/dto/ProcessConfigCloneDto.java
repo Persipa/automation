@@ -12,9 +12,9 @@ import javax.validation.constraints.NotBlank;
 public class ProcessConfigCloneDto {
 
     @NotBlank(message = "配置名称不可为空")
-    private String resourceName;
+    private String configName;
 
-    private String resourcePostUri;
+    private String remark;
 
     @NotBlank(message = "源配置id 不可为空")
     private String sourceConfigId;

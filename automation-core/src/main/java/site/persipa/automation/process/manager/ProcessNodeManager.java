@@ -310,6 +310,7 @@ public class ProcessNodeManager {
                 .eq(ProcessNode::getConfigId, configId)
                 .ne(ProcessNode::getNodeStatus, ProcessNodeStatusEnum.SAVED));
         if (nodeList.isEmpty()) {
+            processConfigService.flushStatus(configId);
             return 0;
         }
         // 校验方法

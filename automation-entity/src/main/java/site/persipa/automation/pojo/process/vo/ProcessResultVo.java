@@ -3,13 +3,16 @@ package site.persipa.automation.pojo.process.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * @author persipa
  */
 @Data
-public class ProcessResultVo {
+public class ProcessResultVo implements Serializable {
+
+    private static final long serialVersionUID = 8425461818683948830L;
 
     private String id;
 

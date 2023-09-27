@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class ProcessConfigPageDto {
 
-    private String resourceName;
+    private String configName;
 
     private String processStatus;
 }

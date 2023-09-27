@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -14,20 +15,22 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("process_config")
-public class ProcessConfig {
+public class ProcessConfig implements Serializable {
+
+    private static final long serialVersionUID = 8880156624614033474L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /**
-     * 资源名称
+     * 配置名称
      */
-    private String resourceName;
+    private String configName;
 
     /**
-     * 资源获取uri
+     * 备注
      */
-    private String resourcePostUri;
+    private String remark;
 
     /**
      * 是否启用

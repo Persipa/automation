@@ -1,11 +1,11 @@
 package site.persipa.automation.mapstruct.process;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Mappings;
 import site.persipa.automation.pojo.process.ProcessResult;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
-import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
-import site.persipa.automation.pojo.process.vo.ProcessResultVo;
 
 /**
  * @author persipa
@@ -13,8 +13,11 @@ import site.persipa.automation.pojo.process.vo.ProcessResultVo;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface MapProcessResultMapper {
 
-    ProcessResultVo toVo(ProcessResult entity);
-
-    ProcessResultPreviewVo resultBoToPreviewVo(ProcessResultBo resultBo);
-
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "createTime", ignore = true),
+            @Mapping(target = "updateTime", ignore = true),
+            @Mapping(target = "deleted", ignore = true)
+    })
+    ProcessResult fromResultBo(ProcessResultBo resultBo);
 }

@@ -14,7 +14,7 @@ import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.mapstruct.process.MapProcessConfigMapper;
 import site.persipa.automation.mapstruct.process.MapProcessNodeEntityMapper;
 import site.persipa.automation.mapstruct.process.MapProcessNodeMapper;
-import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
+import site.persipa.automation.mapstruct.process.MapProcessResultItemMapper;
 import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.ProcessNode;
 import site.persipa.automation.pojo.process.ProcessNodeEntity;
@@ -68,18 +68,19 @@ public class ProcessConfigManager {
 
     private final MapProcessNodeEntityMapper mapProcessNodeEntityMapper;
 
-    private final MapProcessResultMapper mapProcessResultMapper;
+    private final MapProcessResultItemMapper mapProcessResultItemMapper;
 
     /**
      * 添加一个执行配置
+     *
      * @param processConfigDto 添加的信息
      * @return 配置的id
      */
     @Transactional(rollbackFor = Exception.class)
     public String add(ProcessConfigDto processConfigDto) {
-        String resourceName = processConfigDto.getResourceName();
+        String resourceName = processConfigDto.getConfigName();
         long count = processConfigService.count(Wrappers.lambdaQuery(ProcessConfig.class)
-                .eq(ProcessConfig::getResourceName, resourceName));
+                .eq(ProcessConfig::getConfigName, resourceName));
         Assert.isTrue(count == 0, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NAME_DUPLICATE));
 
         ProcessConfig spiderConfig = mapProcessConfigMapper.dto2Pojo(processConfigDto);
@@ -90,6 +91,7 @@ public class ProcessConfigManager {
 
     /**
      * 更新执行的配置
+     *
      * @param dto 更新的信息
      * @return 是否成功
      */
@@ -98,19 +100,20 @@ public class ProcessConfigManager {
         ProcessConfig processConfig = processConfigService.getById(dto.getId());
         Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
 
-        if (StrUtil.isNotBlank(dto.getResourceName())) {
+        if (StrUtil.isNotBlank(dto.getConfigName())) {
             long count = processConfigService.count(Wrappers.lambdaQuery(ProcessConfig.class)
-                    .eq(ProcessConfig::getResourceName, dto.getResourceName())
+                    .eq(ProcessConfig::getConfigName, dto.getConfigName())
                     .ne(ProcessConfig::getId, dto.getId()));
             Assert.isTrue(count == 0, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NAME_DUPLICATE));
-            processConfig.setResourceName(dto.getResourceName());
+            processConfig.setConfigName(dto.getConfigName());
         }
-        processConfig.setResourcePostUri(dto.getResourcePostUri());
+        processConfig.setRemark(dto.getRemark());
         return processConfigService.updateById(processConfig);
     }
 
     /**
      * 克隆一份可执行的配置
+     *
      * @param cloneDto 克隆的信息
      * @return 新配置的id
      */
@@ -152,6 +155,7 @@ public class ProcessConfigManager {
 
     /**
      * 预览执行的结果
+     *
      * @param configId 配置的id
      * @return 预执行的结果
      */
@@ -160,7 +164,7 @@ public class ProcessConfigManager {
         Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
 
         ProcessResultBo processResultBo = processManager.execute(processConfig, ProcessTypeEnum.PREVIEW);
-        ProcessResultPreviewVo previewVo = mapProcessResultMapper.resultBoToPreviewVo(processResultBo);
+        ProcessResultPreviewVo previewVo = mapProcessResultItemMapper.resultBoToPreviewVo(processResultBo);
         if (ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus())) {
             Object processResult = previewVo.getResult();
             boolean canSerialize = true;
@@ -187,7 +191,9 @@ public class ProcessConfigManager {
         return previewVo;
     }
 
-    /**手动执行配置
+    /**
+     * 手动执行配置
+     *
      * @param configId 要执行的配置的id
      * @return 是否成功
      */
@@ -206,6 +212,7 @@ public class ProcessConfigManager {
 
     /**
      * 分页查询配置信息
+     *
      * @param pageDto 查询条件
      * @return 查询结果
      */
@@ -215,7 +222,7 @@ public class ProcessConfigManager {
         Page<ProcessConfig> page = new Page<>(pageDto.getCurrent(), pageDto.getSize(), true);
 
         return processConfigService.page(page, Wrappers.lambdaQuery(ProcessConfig.class)
-                .like(StrUtil.isNotBlank(params.getResourceName()), ProcessConfig::getResourceName, params.getResourceName())
+                .like(StrUtil.isNotBlank(params.getConfigName()), ProcessConfig::getConfigName, params.getConfigName())
                 .eq(processStatus != null, ProcessConfig::getProcessStatus, processStatus));
     }
 

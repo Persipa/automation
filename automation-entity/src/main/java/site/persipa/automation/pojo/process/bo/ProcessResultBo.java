@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
+import site.persipa.automation.enums.process.ProcessTypeEnum;
+
+import java.time.LocalDateTime;
 
 /**
  * @author persipa
@@ -19,7 +22,9 @@ public class ProcessResultBo {
 
     private ProcessStatusEnum processStatus;
 
-    private String logId;
+    private ProcessTypeEnum processType;
+
+    private String processId;
 
     private Integer resultCount;
 
@@ -28,4 +33,8 @@ public class ProcessResultBo {
     private String message;
 
     private Integer saveCount;
+
+    private LocalDateTime executeTime;
+
+    private LocalDateTime completeTime;
 }
