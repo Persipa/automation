@@ -187,6 +187,11 @@ public class ProcessConfigManager {
             if (!canSerialize) {
                 previewVo.setResult(processResult.toString());
             }
+
+            if (!ProcessConfigStatusEnum.VERIFY_PASS.equals(processConfig.getProcessStatus())) {
+                processConfig.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
+                processConfigService.updateById(processConfig);
+            }
         }
         return previewVo;
     }

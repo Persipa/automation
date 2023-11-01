@@ -7,7 +7,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
-import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.ProcessLog;
 import site.persipa.automation.process.service.ProcessLogService;

@@ -2,7 +2,6 @@ package site.persipa.automation.xxl.job;
 
 import cn.hutool.core.text.StrFormatter;
 import com.xxl.job.core.context.XxlJobHelper;
-import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import site.persipa.automation.dubbo.consumer.BarkClientConsumer;
@@ -30,7 +29,7 @@ public class ProcessJob {
      * @deprecated 计划不再使用定时任务直接执行配置，使用定时任务操作业务系统，间接执行配置
      */
     @Deprecated
-    @XxlJob("BtbttSpiderHandler")
+//    @XxlJob("BtbttSpiderHandler")
     public void execute() {
         String configId = XxlJobHelper.getJobParam();
         ProcessConfig processConfig = processConfigService.getById(configId);
