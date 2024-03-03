@@ -3,14 +3,22 @@ spring:
     name: automation
   cloud:
     nacos:
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        server-addr: 192.168.1.100:8848
-        namespace: m6
+        server-addr: ${NACOS_DISCOVERY_HOST:infrastructure-nacos}:${NACOS_DISCOVERY_PORT:8848}
+        namespace: ${NACOS_DISCOVERY_NAMESPACE:wsl}
       config:
-        server-addr: 192.168.1.100:8848
+        server-addr: ${NACOS_DISCOVERY_HOST:infrastructure-nacos}:${NACOS_DISCOVERY_PORT:8848}
+        namespace: ${NACOS_DISCOVERY_NAMESPACE:wsl}
         file-extension: yaml
-        namespace: m6
         shared-configs:
           - group: COMMON_GROUP
             data-id: dubbo.yaml
+            refresh: true
+          - group: COMMON_GROUP
+            data-id: database.yaml
+            refresh: true
+          - group: COMMON_GROUP
+            data-id: middleware.yaml
             refresh: true
