@@ -12,7 +12,7 @@ import site.persipa.automation.enums.process.NodeEntityGainTypeEnum;
  * @author persipa
  */
 @Data
-@TableName("automation_template_node_entity")
+@TableName(value = "template_node_entity", keepGlobalPrefix = true)
 public class TemplateNodeEntity {
 
     @TableId(type = IdType.ASSIGN_ID)

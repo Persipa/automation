@@ -2,12 +2,13 @@ package site.persipa.automation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 /**
  * @author persipa
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = MongoAutoConfiguration.class)
 @ConfigurationPropertiesScan("site.persipa.automation.common.properties")
 public class AutomationApplication {
 

@@ -23,9 +23,9 @@ public interface MapProcessConfigMapper {
             @Mapping(target = "createTime", ignore = true),
             @Mapping(target = "deleted", ignore = true),
             @Mapping(target = "enabled", ignore = true),
-            @Mapping(target = "lastProcessTime", ignore = true),
-            @Mapping(target = "processStatus", ignore = true),
-            @Mapping(target = "updateTime", ignore = true)
+            @Mapping(target = "updateTime", ignore = true),
+            @Mapping(target = "configCode", ignore = true),
+            @Mapping(target = "configState", ignore = true)
     })
     ProcessConfig dto2Pojo(ProcessConfigDto dto);
 
@@ -33,7 +33,11 @@ public interface MapProcessConfigMapper {
     ProcessConfigDto cloneDto2Dto(ProcessConfigCloneDto cloneDto);
 
     @Mappings({
-            @Mapping(target = "id", source = "entity.id")
+            @Mapping(target = "id", source = "entity.id"),
+            @Mapping(target = "lastProcessTime", ignore = true),
+            @Mapping(target = "processStatus", ignore = true),
+            @Mapping(target = "resourceName", ignore = true),
+            @Mapping(target = "resourcePostUri", ignore = true)
     })
     ProcessConfigDetailVo toDetailVo(ProcessConfig entity, List<ProcessNodeVo> nodes);
 }

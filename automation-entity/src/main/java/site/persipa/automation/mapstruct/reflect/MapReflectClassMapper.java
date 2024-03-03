@@ -16,7 +16,12 @@ public interface MapReflectClassMapper {
 
     @Mappings({
             @Mapping(target = "optimizeJoinOfCountSql", ignore = true),
-            @Mapping(target = "records", source = "records")
+            @Mapping(target = "records", source = "records"),
+            @Mapping(target = "countId", ignore = true),
+            @Mapping(target = "maxLimit", ignore = true),
+            @Mapping(target = "optimizeCountSql", ignore = true),
+            @Mapping(target = "orders", ignore = true),
+            @Mapping(target = "searchCount", ignore = true)
     })
     Page<ReflectClassVo> pojoPage2VoPage(Page<ReflectClass> jsoupClassPage);
 }

@@ -6,7 +6,7 @@
     <parent>
         <groupId>site.persipa</groupId>
         <artifactId>automation</artifactId>
-        <version>1.2.1</version>
+        <version>2.0.0</version>
     </parent>
 
     <artifactId>automation-entity</artifactId>
@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>site.persipa</groupId>
-            <artifactId>persipa-cloud-entity</artifactId>
+            <artifactId>persipa-cloud-common-entity</artifactId>
         </dependency>
 
         <dependency>

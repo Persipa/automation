@@ -15,32 +15,32 @@ public enum ProcessTypeEnum {
     /**
      * 自动执行
      */
-    AUTO(1, "auto", true),
+    AUTO("auto", "auto", true),
 
     /**
      * 手动执行
      */
-    MANUAL(2, "manual", true),
+    MANUAL("manual", "manual", true),
 
 
     /**
      * 预览
      */
-    PREVIEW(21, "preview", false),
+    PREVIEW("preview", "preview", false),
 
     /**
      * 测试
      */
-    TEST(22, "test", false),
+    TEST("test", "test", false),
 
     /**
      * 远程调用
      */
-    REMOTE_CALL(3, "remoteCall", true),
+    REMOTE_CALL("remoteCall", "remoteCall", true),
     ;
 
     @EnumValue
-    private final int code;
+    private final String code;
 
     @JsonValue
     private final String value;

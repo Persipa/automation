@@ -1,6 +1,7 @@
 package site.persipa.automation.template.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.persipa.automation.pojo.template.TemplateConfig;
@@ -10,10 +11,8 @@ import site.persipa.automation.pojo.template.dto.TemplateConfigPageDto;
 import site.persipa.automation.pojo.template.vo.TemplateConfigDetailVo;
 import site.persipa.automation.pojo.template.vo.TemplateConfigEntityVo;
 import site.persipa.automation.template.manager.TemplateConfigManager;
-import site.persipa.cloud.pojo.page.dto.PageDto;
-import site.persipa.cloud.pojo.rest.model.Result;
-
-import javax.validation.Valid;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa

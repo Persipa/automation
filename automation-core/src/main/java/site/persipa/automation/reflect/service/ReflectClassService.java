@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import site.persipa.automation.enums.reflect.BasicDataTypeEnum;
 import site.persipa.automation.enums.reflect.PackagingDataTypeEnum;
 import site.persipa.automation.pojo.reflect.ReflectClass;
-import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaCustomException;
 
 import java.util.List;
 

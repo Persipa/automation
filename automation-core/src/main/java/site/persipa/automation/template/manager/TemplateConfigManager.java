@@ -32,8 +32,8 @@ import site.persipa.automation.template.service.TemplateConfigService;
 import site.persipa.automation.template.service.TemplateEntityService;
 import site.persipa.automation.template.service.TemplateNodeEntityService;
 import site.persipa.automation.template.service.TemplateNodeService;
-import site.persipa.cloud.exception.PersipaRuntimeException;
-import site.persipa.cloud.pojo.page.dto.PageDto;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
 
 import java.util.*;
 import java.util.function.Function;
@@ -182,7 +182,7 @@ public class TemplateConfigManager {
                 .map(nodeId -> templateNodeEntityService.listByNodeId(nodeId, true))
                 .flatMap(List::stream)
                 .filter(nodeEntity -> StrUtil.isNotEmpty(nodeEntity.getEntityId()))
-                .collect(Collectors.toList());
+                .toList();
         Map<String, String> templateProcessEntityIdMap = new HashMap<>();
         List<TemplateEntityGenDto> genEntities = configGenDto.getGenEntities();
         Map<String, String> entityIdValueMap = genEntities.stream()
@@ -205,6 +205,9 @@ public class TemplateConfigManager {
             ProcessNodeDto processNodeDto = mapTemplateNodeMapper.toProcessDto(processConfigId, templateNode, nodeEntities);
             processNodeManager.upsert(processNodeDto);
         }
+
+        // 校验
+        processConfigManager.previewResult(processConfigId);
 
         return processConfigId;
     }

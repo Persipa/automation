@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboService;
 import site.persipa.automation.dubbo.provider.process.ProcessResultApi;
 import site.persipa.automation.pojo.process.dto.ProcessResultDto;
+import site.persipa.automation.pojo.process.vo.ProcessExecutionResultVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultVo;
 import site.persipa.automation.process.manager.ProcessResultManager;
 
@@ -12,7 +13,7 @@ import java.util.List;
 /**
  * @author persipa
  */
-@DubboService(version = "1.0")
+@DubboService(version = "2.0")
 @RequiredArgsConstructor
 public class ProcessResultApiImpl implements ProcessResultApi {
 
@@ -26,6 +27,11 @@ public class ProcessResultApiImpl implements ProcessResultApi {
     @Override
     public List<ProcessResultVo> listResultItem(String processId) {
         return processResultManager.listByProcessId(processId);
+    }
+
+    @Override
+    public ProcessExecutionResultVo getResultByTicket(String ticketId) {
+        return processResultManager.getResultByTicket(ticketId);
     }
 
 }

@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import site.persipa.automation.pojo.reflect.dto.ReflectMethodDto;
 import site.persipa.automation.reflect.manager.ReflectMethodManager;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa

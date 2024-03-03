@@ -18,7 +18,7 @@ import site.persipa.automation.reflect.service.ReflectMethodService;
 import site.persipa.automation.template.service.TemplateConfigService;
 import site.persipa.automation.template.service.TemplateNodeEntityService;
 import site.persipa.automation.template.service.TemplateNodeService;
-import site.persipa.cloud.exception.PersipaRuntimeException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
 
 import java.util.Collections;
 import java.util.List;

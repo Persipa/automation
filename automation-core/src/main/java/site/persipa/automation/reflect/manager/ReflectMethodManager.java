@@ -12,13 +12,12 @@ import site.persipa.automation.pojo.reflect.dto.ReflectMethodDto;
 import site.persipa.automation.reflect.service.ReflectClassService;
 import site.persipa.automation.reflect.service.ReflectMethodArgService;
 import site.persipa.automation.reflect.service.ReflectMethodService;
-import site.persipa.cloud.exception.PersipaCustomException;
-import site.persipa.cloud.exception.PersipaRuntimeException;
+import site.persipa.common.entity.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author persipa
@@ -90,7 +89,7 @@ public class ReflectMethodManager {
         List<ReflectMethodArg> methodArgList = reflectMethodArgService.listByMethodId(reflectMethod.getId(), true);
         List<String> argClassIdList = methodArgList.stream()
                 .map(ReflectMethodArg::getClassId)
-                .collect(Collectors.toList());
+                .toList();
         /// 验证参数数量
         Assert.equals(argCount, argClassIdList.size(), () -> new PersipaCustomException(ReflectExceptionEnum.REFLECT_METHOD_ARGS_COUNT_INCORRECT));
         Class<?>[] argClassArr = new Class[argCount];

@@ -15,32 +15,32 @@ public enum MethodResultTypeEnum {
     /**
      * 方法无返回值
      */
-    VOID(0, "void"),
+    VOID("void", "void"),
 
     /**
      * 方法返回基础累心
      */
-    BASIC(1, "basic"),
+    BASIC("basic", "basic"),
 
     /**
      * 方法返回一个普通的对象
      */
-    INSTANCE(2, "instance"),
+    INSTANCE("instance", "instance"),
 
     /**
      * 方法返回一个数组
      */
-    ARRAY(3, "array"),
+    ARRAY("array", "array"),
 
     /**
      * 返回返回可遍历的对象
      */
-    COLLECTION(4, "collection"),
+    COLLECTION("collection", "collection"),
 
     ;
 
     @EnumValue
-    private final int code;
+    private final String code;
 
     @JsonValue
     private final String value;

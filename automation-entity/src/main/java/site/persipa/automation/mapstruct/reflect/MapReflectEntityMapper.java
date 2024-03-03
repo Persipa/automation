@@ -16,12 +16,15 @@ import site.persipa.automation.pojo.reflect.vo.ReflectEntityPreviewVo;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface MapReflectEntityMapper {
 
-    @Mapping(target = "parentId", ignore = true)
+    @Mappings({
+            @Mapping(target = "parentId", ignore = true),
+            @Mapping(target = "previewValue", ignore = true)
+    })
     ReflectEntity fromDto(ReflectEntityDto dto);
 
     @Mappings({
             @Mapping(target = "id", source = "reflectEntity.id"),
-            @Mapping(target = "classId",source = "reflectEntity.classId"),
+            @Mapping(target = "classId", source = "reflectEntity.classId"),
             @Mapping(target = "entityValue", ignore = true),
             @Mapping(target = "constructSuccess", ignore = true)
     })

@@ -10,7 +10,7 @@ import site.persipa.automation.enums.reflect.PackagingDataTypeEnum;
 import site.persipa.automation.pojo.reflect.ReflectClass;
 import site.persipa.automation.reflect.mapper.ReflectClassMapper;
 import site.persipa.automation.reflect.service.ReflectClassService;
-import site.persipa.cloud.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaCustomException;
 
 import java.util.ArrayList;
 import java.util.List;

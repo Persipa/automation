@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import site.persipa.automation.pojo.process.dto.ProcessNodeDto;
 import site.persipa.automation.pojo.process.vo.ProcessNodeVo;
 import site.persipa.automation.process.manager.ProcessNodeManager;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 import java.util.List;
 

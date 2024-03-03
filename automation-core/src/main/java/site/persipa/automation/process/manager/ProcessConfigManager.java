@@ -5,19 +5,20 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import site.persipa.automation.constant.RabbitConstant;
 import site.persipa.automation.enums.exception.ProcessExceptionEnum;
-import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessConfigStateEnum;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
 import site.persipa.automation.enums.process.ProcessTypeEnum;
 import site.persipa.automation.mapstruct.process.MapProcessConfigMapper;
 import site.persipa.automation.mapstruct.process.MapProcessNodeEntityMapper;
 import site.persipa.automation.mapstruct.process.MapProcessNodeMapper;
 import site.persipa.automation.mapstruct.process.MapProcessResultItemMapper;
-import site.persipa.automation.pojo.process.ProcessConfig;
-import site.persipa.automation.pojo.process.ProcessNode;
-import site.persipa.automation.pojo.process.ProcessNodeEntity;
+import site.persipa.automation.pojo.process.*;
+import site.persipa.automation.pojo.process.bo.ProcessExecuteBo;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessConfigCloneDto;
 import site.persipa.automation.pojo.process.dto.ProcessConfigDto;
@@ -29,16 +30,15 @@ import site.persipa.automation.pojo.process.vo.ProcessNodeVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.automation.pojo.reflect.ReflectEntity;
 import site.persipa.automation.pojo.reflect.ReflectMethod;
-import site.persipa.automation.process.service.ProcessConfigService;
-import site.persipa.automation.process.service.ProcessNodeEntityService;
-import site.persipa.automation.process.service.ProcessNodeService;
+import site.persipa.automation.process.service.*;
 import site.persipa.automation.reflect.service.ReflectEntityService;
 import site.persipa.automation.reflect.service.ReflectMethodService;
-import site.persipa.cloud.exception.PersipaRuntimeException;
-import site.persipa.cloud.pojo.page.dto.PageDto;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -51,23 +51,19 @@ import java.util.stream.Collectors;
 public class ProcessConfigManager {
 
     private final ProcessConfigService processConfigService;
-
     private final ProcessNodeService processNodeService;
-
     private final ProcessNodeEntityService processNodeEntityService;
-
+    private final ProcessExecutionLogService executionLogService;
     private final ReflectMethodService reflectMethodService;
-
     private final ReflectEntityService reflectEntityService;
-
     private final ProcessManager processManager;
+    private final ProcessExecutionTicketService processExecutionTicketService;
+
+    private final AmqpTemplate amqpTemplate;
 
     private final MapProcessConfigMapper mapProcessConfigMapper;
-
     private final MapProcessNodeMapper mapProcessNodeMapper;
-
     private final MapProcessNodeEntityMapper mapProcessNodeEntityMapper;
-
     private final MapProcessResultItemMapper mapProcessResultItemMapper;
 
     /**
@@ -78,13 +74,12 @@ public class ProcessConfigManager {
      */
     @Transactional(rollbackFor = Exception.class)
     public String add(ProcessConfigDto processConfigDto) {
-        String resourceName = processConfigDto.getConfigName();
         long count = processConfigService.count(Wrappers.lambdaQuery(ProcessConfig.class)
-                .eq(ProcessConfig::getConfigName, resourceName));
+                .eq(ProcessConfig::getConfigCode, processConfigDto.getConfigName()));
         Assert.isTrue(count == 0, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NAME_DUPLICATE));
 
         ProcessConfig spiderConfig = mapProcessConfigMapper.dto2Pojo(processConfigDto);
-        spiderConfig.setProcessStatus(ProcessConfigStatusEnum.INIT);
+        spiderConfig.setConfigState(ProcessConfigStateEnum.INIT);
         processConfigService.save(spiderConfig);
         return spiderConfig.getId();
     }
@@ -123,7 +118,7 @@ public class ProcessConfigManager {
         String sourceConfigId = cloneDto.getSourceConfigId();
         ProcessConfig processConfig = processConfigService.getById(sourceConfigId);
         Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
-        Assert.isTrue(processConfig.getProcessStatus().isExecutable(),
+        Assert.isTrue(processConfig.getConfigState().isExecutable(),
                 () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NON_EXECUTABLE));
 
         // 复制配置
@@ -148,7 +143,7 @@ public class ProcessConfigManager {
 
         // 更新配置状态
         processConfigService.update(Wrappers.lambdaUpdate(ProcessConfig.class)
-                .set(ProcessConfig::getProcessStatus, ProcessConfigStatusEnum.SAVED)
+                .set(ProcessConfig::getConfigState, ProcessConfigStateEnum.SAVED)
                 .eq(ProcessConfig::getId, configId));
         return configId;
     }
@@ -188,31 +183,37 @@ public class ProcessConfigManager {
                 previewVo.setResult(processResult.toString());
             }
 
-            if (!ProcessConfigStatusEnum.VERIFY_PASS.equals(processConfig.getProcessStatus())) {
-                processConfig.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
+            if (!ProcessConfigStateEnum.VERIFY_PASS.equals(processConfig.getConfigState())) {
+                processConfig.setConfigState(ProcessConfigStateEnum.VERIFY_PASS);
                 processConfigService.updateById(processConfig);
             }
         }
         return previewVo;
     }
 
-    /**
-     * 手动执行配置
-     *
-     * @param configId 要执行的配置的id
-     * @return 是否成功
-     */
     @Transactional(rollbackFor = Exception.class)
-    public Boolean execute(String configId) {
+    public String executeManually(String configId) {
+        // 校验
         ProcessConfig processConfig = processConfigService.getById(configId);
         Assert.notNull(processConfig, () -> new PersipaRuntimeException(ProcessExceptionEnum.CONFIG_NOT_EXIST));
-        ProcessResultBo processResultBo = processManager.execute(processConfig, ProcessTypeEnum.MANUAL);
-        boolean processSuccess = ProcessStatusEnum.SUCCESS.equals(processResultBo.getProcessStatus());
-        if (processSuccess) {
-            processConfig.setProcessStatus(ProcessConfigStatusEnum.VERIFY_PASS);
-            processConfigService.updateById(processConfig);
-        }
-        return processSuccess;
+
+        // 记录
+        ProcessExecutionLog processLog = new ProcessExecutionLog();
+        processLog.setConfigId(configId);
+        processLog.setConfigName(processConfig.getConfigName());
+        processLog.setProcessType(ProcessTypeEnum.MANUAL);
+        processLog.setCaller("local");
+        processLog.setCallTime(LocalDateTime.now());
+        executionLogService.save(processLog);
+
+        ProcessExecutionTicket ticket = processExecutionTicketService.generateTicket();
+
+        // 发送mq 执行
+        amqpTemplate.convertAndSend(RabbitConstant.AUTOMATION_PROCESS_EXECUTE_DIRECT_EXCHANGE, RabbitConstant.AUTOMATION_PROCESS_EXECUTE_ROUTING,
+                new ProcessExecuteBo(configId, ProcessTypeEnum.MANUAL, ticket.getId()));
+
+        // 返回结果
+        return ticket.getId();
     }
 
     /**
@@ -223,12 +224,12 @@ public class ProcessConfigManager {
      */
     public Page<ProcessConfig> page(PageDto<ProcessConfigPageDto> pageDto) {
         ProcessConfigPageDto params = pageDto.getPayload();
-        ProcessConfigStatusEnum processStatus = ProcessConfigStatusEnum.VALUE_HELPER.find(params.getProcessStatus(), null);
+        ProcessConfigStateEnum processStatus = ProcessConfigStateEnum.VALUE_HELPER.find(params.getProcessStatus(), null);
         Page<ProcessConfig> page = new Page<>(pageDto.getCurrent(), pageDto.getSize(), true);
 
         return processConfigService.page(page, Wrappers.lambdaQuery(ProcessConfig.class)
                 .like(StrUtil.isNotBlank(params.getConfigName()), ProcessConfig::getConfigName, params.getConfigName())
-                .eq(processStatus != null, ProcessConfig::getProcessStatus, processStatus));
+                .eq(processStatus != null, ProcessConfig::getConfigState, processStatus));
     }
 
     public ProcessConfigDetailVo detail(String configId) {
@@ -291,7 +292,7 @@ public class ProcessConfigManager {
                             .filter(StrUtil::isNotEmpty)
                             .collect(Collectors.toSet());
                     removeEntityIdSet.addAll(entityIdSet);
-                    processNodeEntityService.removeBatchByIds(nodeEntityList);
+                    processNodeEntityService.removeBatchByIds(entityIdSet);
                 }
             }
             List<String> processNodeIdList = processNodeList.stream().map(ProcessNode::getId).collect(Collectors.toList());
@@ -301,10 +302,10 @@ public class ProcessConfigManager {
             Set<String> usingEntityIdSet = usingNodeEntityList.stream().map(ProcessNodeEntity::getEntityId).collect(Collectors.toSet());
             removeEntityIdSet.removeIf(usingEntityIdSet::contains);
 
-            processNodeService.removeBatchByIds(processNodeList);
+            processNodeService.removeBatchByIds(processNodeIdList);
         }
 
-        processConfigService.removeById(processConfig);
+        processConfigService.removeById(processConfig.getId());
 
         if (!removeEntityIdSet.isEmpty()) {
             reflectEntityService.removeBatchByEntityId(removeEntityIdSet);

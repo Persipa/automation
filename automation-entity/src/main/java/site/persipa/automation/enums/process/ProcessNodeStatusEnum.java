@@ -12,16 +12,16 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProcessNodeStatusEnum {
 
-    EDITING(1, "editing"),
+    EDITING("editing", "editing"),
 
-    SAVED(2, "saved"),
+    SAVED("saved", "saved"),
 
-    EXCEPTION(3, "exception"),
+    EXCEPTION("exception", "exception"),
 
     ;
 
     @EnumValue
-    private final int code;
+    private final String code;
 
     @JsonValue
     private final String value;

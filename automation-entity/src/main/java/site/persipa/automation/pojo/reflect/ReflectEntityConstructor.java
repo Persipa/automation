@@ -12,7 +12,7 @@ import site.persipa.automation.enums.reflect.ReflectEntityConstructorType;
  * @author persipa
  */
 @Data
-@TableName("reflect_entity_constructor")
+@TableName(value = "reflect_entity_constructor", keepGlobalPrefix = true)
 public class ReflectEntityConstructor {
 
     @TableId(type = IdType.ASSIGN_ID)

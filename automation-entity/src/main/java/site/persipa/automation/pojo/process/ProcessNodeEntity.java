@@ -12,8 +12,8 @@ import site.persipa.automation.enums.process.NodeEntityGainTypeEnum;
  * @author persipa
  */
 @Data
-@TableName("process_node_entity")
-public class ProcessNodeEntity {
+@TableName(value = "process_node_entity", keepGlobalPrefix = true)
+public class ProcessNodeEntity{
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;

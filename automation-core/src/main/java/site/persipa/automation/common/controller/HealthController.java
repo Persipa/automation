@@ -3,7 +3,7 @@ package site.persipa.automation.common.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * 仅测试

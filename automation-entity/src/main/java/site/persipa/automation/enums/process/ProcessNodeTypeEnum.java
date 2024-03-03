@@ -12,16 +12,16 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ProcessNodeTypeEnum {
 
-    SEQUENTIAL(1, "sequential"),
+    SEQUENTIAL("sequential", "sequential"),
 
-    LOOP(2, "loop"),
+    LOOP("loop", "loop"),
 
-    ARRAY(3, "array"),
+    ARRAY("array", "array"),
 
     ;
 
     @EnumValue
-    private final Integer code;
+    private final String code;
 
     @JsonValue
     private final String value;

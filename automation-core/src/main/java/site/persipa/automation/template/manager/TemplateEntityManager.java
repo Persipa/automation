@@ -18,7 +18,7 @@ import site.persipa.automation.pojo.template.dto.TemplateEntityDto;
 import site.persipa.automation.reflect.service.ReflectClassService;
 import site.persipa.automation.reflect.service.ReflectEntityConstructorService;
 import site.persipa.automation.template.service.TemplateEntityService;
-import site.persipa.cloud.exception.PersipaRuntimeException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
 
 import java.util.ArrayList;
 import java.util.List;

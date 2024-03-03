@@ -6,9 +6,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-import site.persipa.cloud.exception.PersipaCustomException;
-import site.persipa.cloud.exception.PersipaRuntimeException;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 import java.util.List;
 

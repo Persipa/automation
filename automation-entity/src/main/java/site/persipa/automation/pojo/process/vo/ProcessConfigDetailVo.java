@@ -2,7 +2,7 @@ package site.persipa.automation.pojo.process.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessConfigStateEnum;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,7 +33,7 @@ public class ProcessConfigDetailVo {
     /**
      * 执行状态
      */
-    private ProcessConfigStatusEnum processStatus;
+    private ProcessConfigStateEnum processStatus;
 
     /**
      * 上次执行时间

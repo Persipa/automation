@@ -7,7 +7,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-@TableName("reflect_entity")
+@TableName(value = "reflect_entity", keepGlobalPrefix = true)
 public class ReflectEntity {
 
     private String id;

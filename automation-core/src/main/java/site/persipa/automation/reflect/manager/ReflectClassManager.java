@@ -9,15 +9,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import site.persipa.automation.enums.exception.ReflectExceptionEnum;
 import site.persipa.automation.enums.reflect.PackagingDataTypeEnum;
-import site.persipa.automation.enums.reflect.ReflectClassType;
+import site.persipa.automation.enums.reflect.ReflectClassTypeEnum;
 import site.persipa.automation.mapstruct.reflect.MapReflectClassMapper;
 import site.persipa.automation.pojo.reflect.ReflectClass;
 import site.persipa.automation.pojo.reflect.dto.ReflectClassDto;
 import site.persipa.automation.pojo.reflect.dto.ReflectClassSearchDto;
 import site.persipa.automation.pojo.reflect.vo.ReflectClassVo;
 import site.persipa.automation.reflect.service.ReflectClassService;
-import site.persipa.cloud.exception.PersipaRuntimeException;
-import site.persipa.cloud.pojo.page.dto.PageDto;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
 
 /**
  * @author persipa
@@ -43,7 +43,7 @@ public class ReflectClassManager {
         Page<ReflectClass> page = Page.of(searchPageDto.getCurrent(), searchPageDto.getSize(), true);
         ReflectClassSearchDto searchDto = searchPageDto.getPayload();
         String classTypeStr = searchDto.getClassType();
-        ReflectClassType classType = ReflectClassType.parseByValue(classTypeStr);
+        ReflectClassTypeEnum classType = ReflectClassTypeEnum.parseByValue(classTypeStr);
         Wrapper<ReflectClass> queryWrapper = Wrappers.lambdaQuery(ReflectClass.class)
                 .like(StringUtils.hasText(searchDto.getPackageName()), ReflectClass::getPackageName, searchDto.getPackageName())
                 .like(StringUtils.hasText(searchDto.getClassName()), ReflectClass::getClassName, searchDto.getClassName())
@@ -71,9 +71,9 @@ public class ReflectClassManager {
         reflectClass.setClassName(clazz.getSimpleName());
         reflectClass.setIterable(clazz.isArray() || Iterable.class.isAssignableFrom(clazz));
         if (PackagingDataTypeEnum.parseByClassName(clazz.getName()) != null) {
-            reflectClass.setClassType(ReflectClassType.PACKAGING_DATA_TYPE);
+            reflectClass.setClassType(ReflectClassTypeEnum.PACKAGING_DATA_TYPE);
         } else {
-            reflectClass.setClassType(ReflectClassType.NORMAL_DATA_TYPE);
+            reflectClass.setClassType(ReflectClassTypeEnum.NORMAL_DATA_TYPE);
         }
 
         return classService.save(reflectClass);
@@ -92,9 +92,9 @@ public class ReflectClassManager {
         vo.setClassName(clazz.getSimpleName());
         vo.setIterable(clazz.isArray() || Iterable.class.isAssignableFrom(clazz));
         if (PackagingDataTypeEnum.parseByClassName(clazz.getName()) != null) {
-            vo.setClassType(ReflectClassType.PACKAGING_DATA_TYPE);
+            vo.setClassType(ReflectClassTypeEnum.PACKAGING_DATA_TYPE);
         } else {
-            vo.setClassType(ReflectClassType.NORMAL_DATA_TYPE);
+            vo.setClassType(ReflectClassTypeEnum.NORMAL_DATA_TYPE);
         }
         return vo;
     }

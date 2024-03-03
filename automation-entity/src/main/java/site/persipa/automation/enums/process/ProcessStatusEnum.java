@@ -15,37 +15,37 @@ public enum ProcessStatusEnum {
     /**
      * 初始化
      */
-    INIT(1, "init"),
+    INIT("init", "init"),
 
     /**
      * 正在执行
      */
-    EXECUTING(5, "executing"),
+    EXECUTING("executing", "executing"),
 
     /**
      * 执行成功
      */
-    SUCCESS(91, "success"),
+    SUCCESS("success", "success"),
 
     /**
      * 执行失败
      */
-    FAIL(92, "fail"),
+    FAIL("fail", "fail"),
 
     /**
      * 跳过执行
      */
-    SKIP(93, "skip"),
+    SKIP("skip", "skip"),
 
     /**
      * 拒绝执行
      */
-    REFUSE(94, "refuse"),
+    REFUSE("refuse", "refuse"),
 
     ;
 
     @EnumValue
-    private final int code;
+    private final String code;
 
     @JsonValue
     private final String value;

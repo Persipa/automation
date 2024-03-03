@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import site.persipa.automation.pojo.reflect.dto.ReflectEntityDto;
 import site.persipa.automation.pojo.reflect.vo.ReflectEntityPreviewVo;
 import site.persipa.automation.reflect.manager.ReflectEntityManager;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa
@@ -19,7 +19,7 @@ public class EntityController {
 
     @PostMapping("/add")
     public Result<String> addEntity(@RequestBody ReflectEntityDto dto,
-                                     @RequestParam(required = false, defaultValue = "false") boolean force) {
+                                    @RequestParam(required = false, defaultValue = "false") boolean force) {
         return Result.success(reflectEntityManager.addEntity(dto, force));
     }
 

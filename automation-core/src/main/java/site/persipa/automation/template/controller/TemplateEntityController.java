@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import site.persipa.automation.pojo.template.dto.TemplateEntityDto;
 import site.persipa.automation.template.manager.TemplateEntityManager;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa

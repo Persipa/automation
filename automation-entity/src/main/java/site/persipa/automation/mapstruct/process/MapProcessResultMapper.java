@@ -4,7 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Mappings;
-import site.persipa.automation.pojo.process.ProcessResult;
+import site.persipa.automation.pojo.process.ProcessExecution;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 
 /**
@@ -14,10 +14,14 @@ import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 public interface MapProcessResultMapper {
 
     @Mappings({
-            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "completionStat", ignore = true),
             @Mapping(target = "createTime", ignore = true),
+            @Mapping(target = "deleted", ignore = true),
+            @Mapping(target = "executionRemark", ignore = true),
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "startTime", ignore = true),
             @Mapping(target = "updateTime", ignore = true),
-            @Mapping(target = "deleted", ignore = true)
+            @Mapping(target = "ticket", ignore = true)
     })
-    ProcessResult fromResultBo(ProcessResultBo resultBo);
+    ProcessExecution fromResultBo(ProcessResultBo resultBo);
 }

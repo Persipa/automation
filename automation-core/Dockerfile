@@ -1,4 +1,4 @@
-FROM openjdk:11-jre-slim-bullseye
+FROM openjdk:17.0-jdk-slim
 WORKDIR /
 ADD target/automation-core-*.jar app.jar
 ENV JAVA_OPTS=""

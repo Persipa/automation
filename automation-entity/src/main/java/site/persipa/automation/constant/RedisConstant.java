@@ -7,6 +7,7 @@ public class RedisConstant {
 
     public static final String KEY_PREFIX = "process:executing:configId:";
 
-    public static final String PROCESS_EXECUTE_PROCESS_ID_KEY_PREFIX = "process:executing:processId:";
+    public static final String PROCESS_EXECUTE_EXECUTING_HASH_KEY = "automation:process:execution:executing";
 
+    public static final String PROCESS_EXECUTE_COMPLETE_CONFIG_KEY_PREFIX = "automation:process:execution:completed:";
 }

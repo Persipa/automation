@@ -1,6 +1,7 @@
 package site.persipa.automation.dubbo.provider.process;
 
 import site.persipa.automation.pojo.process.dto.ProcessResultDto;
+import site.persipa.automation.pojo.process.vo.ProcessExecutionResultVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultVo;
 
 import java.util.List;
@@ -25,4 +26,12 @@ public interface ProcessResultApi {
      * @return 执行的结果
      */
     List<ProcessResultVo> listResultItem(String processId);
+
+    /**
+     * 通过ticket 获取执行的结果
+     *
+     * @param ticket 结果票据
+     * @return 执行结果
+     */
+    ProcessExecutionResultVo getResultByTicket(String ticket);
 }

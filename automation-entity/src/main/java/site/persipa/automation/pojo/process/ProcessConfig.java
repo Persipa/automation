@@ -1,10 +1,10 @@
 package site.persipa.automation.pojo.process;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessConfigStateEnum;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -14,9 +14,10 @@ import java.time.LocalDateTime;
  * @author persipa
  */
 @Data
-@TableName("process_config")
+@TableName(value = "process_config", keepGlobalPrefix = true)
 public class ProcessConfig implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 8880156624614033474L;
 
     @TableId(type = IdType.ASSIGN_ID)
@@ -26,6 +27,11 @@ public class ProcessConfig implements Serializable {
      * 配置名称
      */
     private String configName;
+
+    /**
+     * 配置代码
+     */
+    private String configCode;
 
     /**
      * 备注
@@ -38,22 +44,20 @@ public class ProcessConfig implements Serializable {
     private Boolean enabled;
 
     /**
-     * 执行状态
+     * 配置状态
      */
-    private ProcessConfigStatusEnum processStatus;
+    private ProcessConfigStateEnum configState;
 
     /**
-     * 上次执行时间
+     * 创建时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime lastProcessTime;
-
     @TableField(fill = FieldFill.INSERT)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
+    /**
+     * 更新时间
+     */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     @TableLogic

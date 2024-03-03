@@ -1,7 +1,7 @@
 package site.persipa.automation.pojo.reflect.vo;
 
 import lombok.Data;
-import site.persipa.automation.enums.reflect.ReflectClassType;
+import site.persipa.automation.enums.reflect.ReflectClassTypeEnum;
 import site.persipa.automation.enums.reflect.ReflectEntityConstructorType;
 
 /**
@@ -18,7 +18,7 @@ public class ReflectEntityPreviewVo {
 
     private String className;
 
-    private ReflectClassType classType;
+    private ReflectClassTypeEnum classType;
 
     private String constructorId;
 

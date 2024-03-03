@@ -12,7 +12,7 @@ import site.persipa.automation.enums.reflect.MethodResultTypeEnum;
  * @author persipa
  */
 @Data
-@TableName("reflect_method")
+@TableName(value = "reflect_method", keepGlobalPrefix = true)
 public class ReflectMethod {
 
     @TableId(type = IdType.ASSIGN_ID)

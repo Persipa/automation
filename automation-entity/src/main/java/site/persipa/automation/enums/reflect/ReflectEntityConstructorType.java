@@ -12,18 +12,18 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ReflectEntityConstructorType {
 
-    NULL(0, "null"),
+    NULL("null", "null"),
 
-    BASIC_DATA_TYPE(1, "basic"),
+    BASIC_DATA_TYPE("basic", "basic"),
 
-    PACKAGING_DATA_TYPE(2, "packaging"),
+    PACKAGING_DATA_TYPE("packaging", "packaging"),
 
-    NORMAL_DATA_TYPE(3, "normal"),
+    NORMAL_DATA_TYPE("normal", "normal"),
 
     ;
 
     @EnumValue
-    private final Integer code;
+    private final String code;
 
     @JsonValue
     private final String value;

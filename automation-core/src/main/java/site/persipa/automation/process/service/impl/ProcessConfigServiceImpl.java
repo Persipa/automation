@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessConfigStateEnum;
 import site.persipa.automation.enums.process.ProcessNodeStatusEnum;
 import site.persipa.automation.pojo.process.ProcessConfig;
 import site.persipa.automation.pojo.process.ProcessNode;
@@ -31,7 +31,7 @@ public class ProcessConfigServiceImpl extends ServiceImpl<ProcessConfigMapper, P
                 .ne(ProcessNode::getNodeStatus, ProcessNodeStatusEnum.SAVED));
         if (unsavedNodeCount == 0) {
             this.update(Wrappers.lambdaUpdate(ProcessConfig.class)
-                    .set(ProcessConfig::getProcessStatus, ProcessConfigStatusEnum.SAVED)
+                    .set(ProcessConfig::getConfigState, ProcessConfigStateEnum.SAVED)
                     .eq(ProcessConfig::getId, configId));
         }
     }

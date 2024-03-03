@@ -1,6 +1,7 @@
 package site.persipa.automation.process.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.persipa.automation.pojo.process.ProcessConfig;
@@ -11,10 +12,8 @@ import site.persipa.automation.pojo.process.dto.ProcessConfigUpdateDto;
 import site.persipa.automation.pojo.process.vo.ProcessConfigDetailVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultPreviewVo;
 import site.persipa.automation.process.manager.ProcessConfigManager;
-import site.persipa.cloud.pojo.page.dto.PageDto;
-import site.persipa.cloud.pojo.rest.model.Result;
-
-import javax.validation.Valid;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa
@@ -57,8 +56,8 @@ public class ProcessConfigController {
     }
 
     @PostMapping("/execute/{configId}")
-    public Result<Boolean> execute(@PathVariable("configId") String configId) {
-        return Result.success(processConfigManager.execute(configId));
+    public Result<String> execute(@PathVariable("configId") String configId) {
+        return Result.success(processConfigManager.executeManually(configId));
     }
 
     @PostMapping("/remove/{configId}")

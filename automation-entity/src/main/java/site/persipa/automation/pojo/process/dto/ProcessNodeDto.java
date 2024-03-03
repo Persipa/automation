@@ -1,10 +1,10 @@
 package site.persipa.automation.pojo.process.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import site.persipa.automation.enums.process.ProcessNodeTypeEnum;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**

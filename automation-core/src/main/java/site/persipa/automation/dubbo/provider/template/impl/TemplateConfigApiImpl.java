@@ -10,7 +10,7 @@ import site.persipa.automation.template.manager.TemplateConfigManager;
 /**
  * @author persipa
  */
-@DubboService(version = "1.0")
+@DubboService(version = "2.0")
 @RequiredArgsConstructor
 public class TemplateConfigApiImpl implements TemplateConfigApi {
 

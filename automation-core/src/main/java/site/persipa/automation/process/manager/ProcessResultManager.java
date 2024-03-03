@@ -1,27 +1,36 @@
 package site.persipa.automation.process.manager;
 
+import cn.hutool.core.lang.Assert;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import site.persipa.automation.enums.process.ProcessExecuteCompletionStatEnum;
 import site.persipa.automation.enums.process.ProcessStatusEnum;
+import site.persipa.automation.mapstruct.process.MapProcessExecutionMapper;
 import site.persipa.automation.mapstruct.process.MapProcessResultItemMapper;
 import site.persipa.automation.mapstruct.process.MapProcessResultMapper;
-import site.persipa.automation.pojo.process.ProcessResult;
+import site.persipa.automation.pojo.process.ProcessExecution;
+import site.persipa.automation.pojo.process.ProcessExecutionResult;
+import site.persipa.automation.pojo.process.ProcessExecutionTicket;
 import site.persipa.automation.pojo.process.ProcessResultItem;
 import site.persipa.automation.pojo.process.bo.ProcessResultBo;
 import site.persipa.automation.pojo.process.dto.ProcessResultDto;
+import site.persipa.automation.pojo.process.vo.ProcessExecutionResultVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultCombineVo;
 import site.persipa.automation.pojo.process.vo.ProcessResultVo;
+import site.persipa.automation.process.service.ProcessExecutionResultService;
+import site.persipa.automation.process.service.ProcessExecutionTicketService;
 import site.persipa.automation.process.service.ProcessResultItemService;
-import site.persipa.automation.process.service.ProcessResultService;
+import site.persipa.automation.process.service.ProcessExecutionService;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,13 +42,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProcessResultManager {
 
-    private final ProcessResultService processResultService;
-
+    private final ProcessExecutionService processExecutionService;
     private final ProcessResultItemService processResultItemService;
+    private final ProcessExecutionResultService processExecutionResultService;
+    private final ProcessExecutionTicketService processExecutionTicketService;
 
     private final MapProcessResultMapper mapProcessResultMapper;
-
     private final MapProcessResultItemMapper mapProcessResultItemMapper;
+    private final MapProcessExecutionMapper mapProcessExecutionMapper;
 
     /**
      * 查询结果
@@ -111,10 +121,11 @@ public class ProcessResultManager {
      *
      * @param processResultBo 执行的结果
      */
+    @Deprecated
     @Transactional(rollbackFor = Exception.class)
     public void saveResult(ProcessResultBo processResultBo) {
-        ProcessResult processResult = mapProcessResultMapper.fromResultBo(processResultBo);
-        processResultService.save(processResult);
+        ProcessExecution processResult = mapProcessResultMapper.fromResultBo(processResultBo);
+        processExecutionService.save(processResult);
 
         List<ProcessResultItem> existResultList = processResultItemService.list(Wrappers.lambdaQuery(ProcessResultItem.class)
                 .eq(ProcessResultItem::getConfigId, processResultBo.getConfigId())
@@ -169,4 +180,75 @@ public class ProcessResultManager {
                 .map(mapProcessResultItemMapper::toVo)
                 .collect(Collectors.toList());
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void saveResult(String executionId, Object resultObject) {
+        if (StringUtils.hasLength(executionId) && resultObject != null) {
+            List<ProcessExecutionResult> resultList = new ArrayList<>();
+            if (resultObject instanceof Iterable<?> iterable) {
+                for (Object o : iterable) {
+                    ProcessExecutionResult executionResult = new ProcessExecutionResult();
+                    executionResult.setExecutionId(executionId);
+                    executionResult.setContent(o.toString());
+                    resultList.add(executionResult);
+                }
+            } else if (resultObject.getClass().isArray()) {
+                int length = Array.getLength(resultObject);
+                for (int i = 0; i < length; i++) {
+                    Object o = Array.get(resultObject, i);
+                    if (!(o instanceof Serializable)) {
+                        ProcessExecutionResult executionResult = new ProcessExecutionResult();
+                        executionResult.setExecutionId(executionId);
+                        executionResult.setContent(o.toString());
+                        resultList.add(executionResult);
+                    }
+                }
+            } else {
+                ProcessExecutionResult executionResult = new ProcessExecutionResult();
+                executionResult.setExecutionId(executionId);
+                executionResult.setContent(resultObject.toString());
+                resultList.add(executionResult);
+            }
+
+            // 保存
+            if (!resultList.isEmpty()) {
+                processExecutionResultService.saveBatch(resultList);
+            }
+        }
+    }
+
+    public ProcessExecutionResultVo getResultByTicket(String ticketId) {
+        // todo 校验ticket 有效期
+        ProcessExecutionTicket ticket = processExecutionTicketService.getById(ticketId);
+        Assert.notNull(ticket, "票据有误");
+        ProcessExecution processExecution = processExecutionService.getById(ticket.getExecutionId());
+        ProcessExecutionResultVo result;
+        if (processExecution == null) {
+            result = new ProcessExecutionResultVo();
+            result.setCompletionStat(ProcessExecuteCompletionStatEnum.UNKNOWN);
+        } else {
+            result = mapProcessExecutionMapper.toResultVo(processExecution);
+            List<ProcessExecutionResult> executionResultList = this.listByTicket(ticketId);
+            result.setResults(executionResultList);
+        }
+        return result;
+    }
+
+    public List<ProcessExecutionResult> listByTicket(String ticketId) {
+        ProcessExecutionTicket ticket = processExecutionTicketService.getById(ticketId);
+        Assert.notNull(ticket, "ticket 不正确");
+        // 如果有引用值则优先引用的值
+        if (StringUtils.hasLength(ticket.getRelationId())) {
+            ticket = processExecutionTicketService.getById(ticket.getRelationId());
+            Assert.notNull(ticket, "关联ticket 不正确");
+        }
+        ProcessExecution processExecution = processExecutionService.getById(ticket.getExecutionId());
+        Assert.notNull(processExecution, "无执行记录");
+        if (ProcessExecuteCompletionStatEnum.SUCCESS.equals(processExecution.getCompletionStat())) {
+            return processExecutionResultService.list(Wrappers.lambdaQuery(ProcessExecutionResult.class)
+                    .eq(ProcessExecutionResult::getExecutionId, processExecution.getId()));
+        }
+        return Collections.emptyList();
+    }
+
 }

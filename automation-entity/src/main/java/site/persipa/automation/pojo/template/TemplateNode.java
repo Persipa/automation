@@ -11,7 +11,7 @@ import site.persipa.automation.enums.process.ProcessNodeTypeEnum;
  * @author persipa
  */
 @Data
-@TableName("automation_template_node")
+@TableName(value = "template_node", keepGlobalPrefix = true)
 public class TemplateNode {
 
     @TableId

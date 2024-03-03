@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import site.persipa.automation.enums.reflect.ReflectClassType;
+import site.persipa.automation.enums.reflect.ReflectClassTypeEnum;
 
 /**
  * 反射的类
@@ -12,7 +12,7 @@ import site.persipa.automation.enums.reflect.ReflectClassType;
  * @author persipa
  */
 @Data
-@TableName("reflect_class")
+@TableName(value = "reflect_class", keepGlobalPrefix = true)
 public class ReflectClass {
 
     @TableId(type = IdType.ASSIGN_ID)
@@ -31,7 +31,7 @@ public class ReflectClass {
     /**
      * 类分类
      */
-    private ReflectClassType classType;
+    private ReflectClassTypeEnum classType;
 
     /**
      * 父类id

@@ -10,7 +10,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-@TableName("automation_template_entity")
+@TableName(value = "template_entity", keepGlobalPrefix = true)
 public class TemplateEntity {
 
     @TableId

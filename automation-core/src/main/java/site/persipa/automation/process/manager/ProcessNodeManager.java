@@ -10,7 +10,7 @@ import site.persipa.automation.enums.exception.ProcessExceptionEnum;
 import site.persipa.automation.enums.exception.ProcessingExceptionEnum;
 import site.persipa.automation.enums.exception.ReflectExceptionEnum;
 import site.persipa.automation.enums.process.NodeEntityGainTypeEnum;
-import site.persipa.automation.enums.process.ProcessConfigStatusEnum;
+import site.persipa.automation.enums.process.ProcessConfigStateEnum;
 import site.persipa.automation.enums.process.ProcessNodeStatusEnum;
 import site.persipa.automation.enums.process.ProcessNodeTypeEnum;
 import site.persipa.automation.mapstruct.process.MapProcessNodeEntityMapper;
@@ -30,8 +30,8 @@ import site.persipa.automation.reflect.manager.ReflectEntityManager;
 import site.persipa.automation.reflect.manager.ReflectMethodManager;
 import site.persipa.automation.reflect.service.ReflectEntityService;
 import site.persipa.automation.reflect.service.ReflectMethodService;
-import site.persipa.cloud.exception.PersipaCustomException;
-import site.persipa.cloud.exception.PersipaRuntimeException;
+import site.persipa.common.entity.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -104,7 +104,7 @@ public class ProcessNodeManager {
             processNodeEntityService.saveOrUpdateBatch(nodeEntityList);
 
         // 更改配置状态为：编辑中
-        processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
+        processConfig.setConfigState(ProcessConfigStateEnum.EDITING);
         processConfigService.updateById(processConfig);
 
         return nodeId;
@@ -120,7 +120,7 @@ public class ProcessNodeManager {
         // 如果删除的不是最后一个节点，则需要校验
         if (!nodeList.isEmpty() && !nodeList.get(0).equals(node)) {
             ProcessConfig processConfig = processConfigService.getById(node.getConfigId());
-            processConfig.setProcessStatus(ProcessConfigStatusEnum.EDITING);
+            processConfig.setConfigState(ProcessConfigStateEnum.EDITING);
             processConfigService.updateById(processConfig);
         }
         // 移除节点和节点参数
@@ -244,7 +244,7 @@ public class ProcessNodeManager {
         List<String> constructEntityIdList = processingEntityList.stream()
                 .filter(processingEntity -> NodeEntityGainTypeEnum.CONSTRUCT.equals(processingEntity.getGainType()))
                 .map(ProcessNodeEntity::getEntityId)
-                .collect(Collectors.toList());
+                .toList();
         Map<String, Object> constructEntityMap = new HashMap<>();
         for (String entityId : constructEntityIdList) {
             Object tempArg = reflectEntityManager.construct(entityId);

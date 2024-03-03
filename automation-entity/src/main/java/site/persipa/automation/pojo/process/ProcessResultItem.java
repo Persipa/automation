@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * @author persipa
  */
 @Data
-@TableName("process_result_item")
+@TableName(value = "process_result_item", keepGlobalPrefix = true)
 public class ProcessResultItem {
 
     @TableId

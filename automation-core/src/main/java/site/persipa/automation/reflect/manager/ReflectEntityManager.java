@@ -24,8 +24,8 @@ import site.persipa.automation.process.service.ProcessNodeEntityService;
 import site.persipa.automation.reflect.service.ReflectClassService;
 import site.persipa.automation.reflect.service.ReflectEntityConstructorService;
 import site.persipa.automation.reflect.service.ReflectEntityService;
-import site.persipa.cloud.exception.PersipaCustomException;
-import site.persipa.cloud.exception.PersipaRuntimeException;
+import site.persipa.common.entity.exception.PersipaCustomException;
+import site.persipa.common.entity.exception.PersipaRuntimeException;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;

@@ -2,8 +2,8 @@ package site.persipa.automation.enums.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import site.persipa.cloud.enums.ExceptionLevelEnum;
-import site.persipa.cloud.enums.PersipaExceptionDef;
+import site.persipa.common.entity.enums.ExceptionLevelEnum;
+import site.persipa.common.entity.enums.PersipaExceptionDef;
 
 /**
  * @author persipa

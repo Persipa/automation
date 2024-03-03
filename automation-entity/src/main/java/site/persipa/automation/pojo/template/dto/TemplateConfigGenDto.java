@@ -1,8 +1,9 @@
 package site.persipa.automation.pojo.template.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @Data
 public class TemplateConfigGenDto implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = -4156503896118183365L;
     /**
      * 模板id

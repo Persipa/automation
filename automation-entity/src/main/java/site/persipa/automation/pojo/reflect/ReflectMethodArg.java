@@ -11,7 +11,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-@TableName("reflect_method_arg")
+@TableName(value = "reflect_method_arg", keepGlobalPrefix = true)
 public class ReflectMethodArg {
 
     @TableId(type = IdType.ASSIGN_ID)

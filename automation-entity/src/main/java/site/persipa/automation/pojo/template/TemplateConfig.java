@@ -10,7 +10,7 @@ import lombok.Data;
  * @author persipa
  */
 @Data
-@TableName("automation_template_config")
+@TableName(value = "template_config", keepGlobalPrefix = true)
 public class TemplateConfig {
 
     @TableId

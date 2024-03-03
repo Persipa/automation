@@ -13,7 +13,7 @@ import site.persipa.automation.enums.process.ProcessNodeTypeEnum;
  * @author persipa
  */
 @Data
-@TableName("process_node")
+@TableName(value = "process_node", keepGlobalPrefix = true)
 public class ProcessNode {
 
     @TableId(type = IdType.ASSIGN_ID)

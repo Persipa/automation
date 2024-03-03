@@ -1,7 +1,7 @@
 package site.persipa.automation.pojo.reflect.vo;
 
 import lombok.Data;
-import site.persipa.automation.enums.reflect.ReflectClassType;
+import site.persipa.automation.enums.reflect.ReflectClassTypeEnum;
 
 /**
  * @author persipa
@@ -15,7 +15,7 @@ public class ReflectClassVo {
 
     private String className;
 
-    private ReflectClassType classType;
+    private ReflectClassTypeEnum classType;
 
     private Boolean iterable;
 

@@ -8,8 +8,8 @@ import site.persipa.automation.pojo.reflect.dto.ReflectClassDto;
 import site.persipa.automation.pojo.reflect.dto.ReflectClassSearchDto;
 import site.persipa.automation.pojo.reflect.vo.ReflectClassVo;
 import site.persipa.automation.reflect.manager.ReflectClassManager;
-import site.persipa.cloud.pojo.page.dto.PageDto;
-import site.persipa.cloud.pojo.rest.model.Result;
+import site.persipa.common.entity.pojo.page.dto.PageDto;
+import site.persipa.common.entity.pojo.rest.model.Result;
 
 /**
  * @author persipa
